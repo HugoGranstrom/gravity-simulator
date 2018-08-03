@@ -4,7 +4,7 @@ import argparse
 # argument parsing
 parser = argparse.ArgumentParser(description="A newtonian gravity simulator")
 parser.add_argument("-t", "--time", type=float, default=0, dest="time", 
-                    help="The amount of time the simulation will simulate measured in years. Type 0 for infinite time. (Default: 0)")
+                    help="The amount of time the simulation will simulate measured in days. Type 0 for infinite time. (Default: 0)")
 parser.add_argument("--dt", type=float, default=0.01, dest="dt",
                     help="The timestep to use. (Default: 0.01)")
 parser.add_argument("--scale", type=float, default=1000, dest="scale",
