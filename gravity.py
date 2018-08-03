@@ -1,4 +1,23 @@
 from vpython import *
+import argparse
+
+# argument parsing
+parser = argparse.ArgumentParser(description="A newtonian gravity simulator")
+parser.add_argument("-t", "--time", type=float, default=0, dest="time", 
+                    help="The amount of time the simulation will simulate measured in years. Type 0 for infinite time. (Default: 0)")
+parser.add_argument("--dt", type=float, default=0.01, dest="dt",
+                    help="The timestep to use. (Default: 0.01)")
+parser.add_argument("--scale", type=float, default=1000, dest="scale",
+                    help="The number to scale the radiuses of the planets to make them visible. Does only affect the visuals not collisions. (Default: 1000)")
+
+# TODO Start
+parser.add_argument("--integrator", type=str, default="euler", dest="integrator", 
+                    help="The integrator to be used. Options: euler, verlet, runge (Default: euler)")
+parser.add_argument("--configfile", type=str, default="config.json", dest="configfile",
+                    help="Path to the config file containing the bodies. (Default: config.json)")
+# TODO End
+
+args = parser.parse_args()
 
 # UNITS:
 # Mass: solar mass 
