@@ -27,12 +27,16 @@ args = parser.parse_args()
 # Time: days
 # G = 4pi^2*AU^3/(M * 365.25) => G = 4*pi^2/365.25^2
 #G = 6.67e-11
+#scale_factor = 1000
+#dt = 0.01
+
 G = 2.9592e-04
-dt = 0.01
 time = 0
-scale_factor = 1000
+dt = args.dt
 AU = 1.5e11
 M = 2e30
+scale_factor = args.scale
+end_time = args.time
 
 # list of all the bodies in the simulation
 bodies = []
@@ -235,14 +239,28 @@ pluto = Body(
 time_label = label(pos=vector(75, 350, 0), pixel_pos=True, text="Time: " + str(time/365) + " years")
 
 # loop over every body and run its update method every timestep
-while True:
-    rate(10000)
-    # calculate the change in velocity for all bodies...
-    for body in bodies:
-        body.update()
-    # ... then move all bodies
-    for body in bodies:
-        body.move()
-    time_label.text = "Time: {:.2f} years".format(time/365)
-    time += dt
+if end_time > 0:
+    while time < end_time:
+        rate(10000)
+        # calculate the change in velocity for all bodies...
+        for body in bodies:
+            body.update()
+        # ... then move all bodies
+        for body in bodies:
+            body.move()
+        time_label.text = "Time: {:.2f} years".format(time/365)
+        time += dt
+
+else:
+    while True:
+        rate(10000)
+        # calculate the change in velocity for all bodies...
+        for body in bodies:
+            body.update()
+        # ... then move all bodies
+        for body in bodies:
+            body.move()
+        time_label.text = "Time: {:.2f} years".format(time/365)
+        time += dt
+
     
