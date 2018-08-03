@@ -9,6 +9,8 @@ parser.add_argument("--dt", type=float, default=0.01, dest="dt",
                     help="The timestep to use. (Default: 0.01)")
 parser.add_argument("--scale", type=float, default=1000, dest="scale",
                     help="The number to scale the radiuses of the planets to make them visible. Does only affect the visuals not collisions. (Default: 1000)")
+parser.add_argument("--rate", type=int, default=10000, dest="rate", 
+                    help="Number of timesteps per second (Default: 10000)")
 
 # TODO Start
 parser.add_argument("--integrator", type=str, default="euler", dest="integrator", 
