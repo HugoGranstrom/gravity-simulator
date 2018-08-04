@@ -14,6 +14,8 @@ parser.add_argument("--rate", type=int, default=10000, dest="rate",
                     help="Number of timesteps per second (Default: 10000)")
 parser.add_argument("--configfile", type=str, default="config.json", dest="configfile",
                     help="Path to the config file containing the bodies. (Default: config.json)")
+parser.add_argument("--useconfig", action="store_true", default=False, dest="useconfig",
+                    help="Use this flag if you want to use the settings in the configfile instead of defaults and cmd arguments. (Default: False)")
 # TODO Start
 parser.add_argument("--integrator", type=str, default="euler", dest="integrator", 
                     help="The integrator to be used. Options: euler, verlet, runge (Default: euler)")
@@ -21,6 +23,19 @@ parser.add_argument("--integrator", type=str, default="euler", dest="integrator"
 # TODO End
 
 args = parser.parse_args()
+
+with open(args.configfile, "r") as configfile:
+    config = json.load(configfile)
+
+if args.useconfig:
+    dt = config[1]["dt"]
+    scale_factor = config[1]["scale_factor"]
+    end_time = config[1]["time"]
+else:
+    dt = args.dt
+    scale_factor = args.scale
+    end_time = args.time
+
 
 # UNITS:
 # Mass: solar mass 
@@ -33,11 +48,9 @@ args = parser.parse_args()
 
 G = 2.9592e-04
 time = 0
-dt = args.dt
+
 AU = 1.5e11
 M = 2e30
-scale_factor = args.scale
-end_time = args.time
 
 # list of all the bodies in the simulation
 bodies = []
@@ -120,10 +133,8 @@ class Body():
 def color_to_vector(color_list):
     return vector(color_list[0]/255, color_list[1]/255, color_list[2]/255)
 
-with open(args.configfile, "r") as configfile:
-    config = json.load(configfile)
 
-for body in config:
+for body in config[0]:
     print(body["name"])
     bodies.append(Body(
         name = body["name"],
@@ -264,7 +275,7 @@ time_label = label(pos=vector(75, 350, 0), pixel_pos=True, text="Time: " + str(t
 # loop over every body and run its update method every timestep
 if end_time > 0:
     while time < end_time:
-        rate(10000)
+        rate(args.rate)
         # calculate the change in velocity for all bodies...
         for body in bodies:
             body.update()
@@ -276,7 +287,7 @@ if end_time > 0:
 
 else:
     while True:
-        rate(10000)
+        rate(args.rate)
         # calculate the change in velocity for all bodies...
         for body in bodies:
             body.update()
