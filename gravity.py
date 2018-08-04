@@ -1,5 +1,6 @@
 from vpython import *
 import argparse
+import json
 
 # argument parsing
 parser = argparse.ArgumentParser(description="A newtonian gravity simulator")
@@ -42,7 +43,7 @@ end_time = args.time
 bodies = []
 
 class Body():
-    def __init__(self, mass=1, radius=1, velocity=vector(0,0,0), position=vector(0,0,0), color=color.white, trail=True, name="Body"):
+    def __init__(self, mass=1, radius=1, velocity=vector(0,0,0), position=vector(0,0,0), color=color.white, trail=True, name="Body", scale=True):
         self.mass = mass
         self.velocity = velocity
         self.position = position
@@ -53,7 +54,10 @@ class Body():
         self.sum_force = vector(0,0,0)
         self.name = name
         self.label = label(pos=self.position, text=self.name, height=10)
-        self.sphere = sphere(pos=self.position, color=self.color, radius=self.radius*scale_factor, make_trail=trail, retain=300)
+        if scale:
+            self.sphere = sphere(pos=self.position, color=self.color, radius=self.radius*scale_factor, make_trail=trail, retain=200)
+        else:
+            self.sphere = sphere(pos=self.position, color=self.color, radius=self.radius, make_trail=trail, retain=300)
         bodies.append(self) # uncomment if you want automatic adding to bodies list
     def update(self):
         self.forces = []
@@ -77,7 +81,7 @@ class Body():
         self.label.pos = self.position
         
     def gravitational_force(self):
-        # calculate the gravitional force from all other bodies
+        # calculate the gravitational force from all other bodies
         for body in bodies:
             # distance to the other body
             r = mag(self.position-body.position)
@@ -112,11 +116,30 @@ class Body():
         self.sphere.pos = self.position
         self.label.pos = self.position
         
-        
+
+def color_to_vector(color_list):
+    return vector(color_list[0]/255, color_list[1]/255, color_list[2]/255)
+
+with open(args.configfile, "r") as configfile:
+    config = json.load(configfile)
+
+for body in config:
+    print(body["name"])
+    bodies.append(Body(
+        name = body["name"],
+        mass = body["mass"],
+        radius = body["radius"],
+        position = vector(body["position"][0], body["position"][1], body["position"][2]),
+        velocity = vector(body["velocity"][0], body["velocity"][1], body["velocity"][2]),
+        trail = body["trail"],
+        color = color_to_vector(body["color"]),
+        scale = body["scale"]
+    ))
+
 # create all bodies in the simulation
 
 sun = Body(mass=1,
-           radius=7e8 * 5 / scale_factor/AU,
+           radius=7e8 * 5 / scale_factor / AU,
            color=color.yellow,
            trail=False,
            name="Sun",
