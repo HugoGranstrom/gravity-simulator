@@ -57,8 +57,8 @@ class Body():
         if scale:
             self.sphere = sphere(pos=self.position, color=self.color, radius=self.radius*scale_factor, make_trail=trail, retain=200)
         else:
-            self.sphere = sphere(pos=self.position, color=self.color, radius=self.radius, make_trail=trail, retain=300)
-        bodies.append(self) # uncomment if you want automatic adding to bodies list
+            self.sphere = sphere(pos=self.position, color=self.color, radius=self.radius, make_trail=trail, retain=200)
+        #bodies.append(self) # uncomment if you want automatic adding to bodies list
     def update(self):
         self.forces = []
         self.sum_force = vector(0,0,0)
@@ -138,7 +138,7 @@ for body in config:
 
 # create all bodies in the simulation
 
-sun = Body(mass=1,
+""" sun = Body(mass=1,
            radius=7e8 * 5 / scale_factor / AU,
            color=color.yellow,
            trail=False,
@@ -241,7 +241,7 @@ pluto = Body(
                color=color.yellow,
                name="Pluto",
                )
-
+ """
 # black_hole = Body(
 #                   mass=4e6,
 #                   radius=2.5e7/AU,
