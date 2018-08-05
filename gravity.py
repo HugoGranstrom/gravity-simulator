@@ -274,7 +274,7 @@ time_label = label(pos=vector(75, 350, 0), pixel_pos=True, text="Time: " + str(t
 
 # loop over every body and run its update method every timestep
 if end_time > 0:
-    while time < end_time:
+    for epoch in range(int(end_time/dt)):
         rate(args.rate)
         # calculate the change in velocity for all bodies...
         for body in bodies:
@@ -282,8 +282,9 @@ if end_time > 0:
         # ... then move all bodies
         for body in bodies:
             body.move()
+        time = epoch*dt
         time_label.text = "Time: {:.2f} years".format(time/365)
-        time += dt
+        
 
 else:
     while True:
