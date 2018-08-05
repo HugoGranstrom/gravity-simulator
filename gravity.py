@@ -275,13 +275,16 @@ pluto = Body(
 time_label = label(pos=vector(20, 350, 0), pixel_pos=True, align='left', text="Time: " + str(time/365) + " years")
 
 ### info box ###
-info_label = label(pos=vector(20, scene.height/3, 0), pixel_pos=True, box=False, align='left', text="<i>Info box</i>\n")
+info_label = label(pos=vector(20, scene.height/3, 0), pixel_pos=True, box=False, align='left', text="")
 
 def onClick(e):
-    obj = scene.mouse.pick
+    obj = scene.mouse.pick  # get the sphere
     if(obj != None):
-        body = bodies[obj.index]
-        info_label.text = '<i>'+body.name+'</i>\n<b>Mass:</b> '+str(body.mass)+' M☉\n'
+        body = bodies[obj.index]  # each sphere has a index attribute wich points to the planets position in the bodies list
+        # info about the planets can noe be retrieved from the class
+        info_label.text = '<b><i>'+body.name+'</i></b>\n<i>Mass:</i> '+str(body.mass)+' M☉\n'
+        # TODO add more info about planets & convert units
+
 
 scene.bind('click', onClick)
 ### ###
