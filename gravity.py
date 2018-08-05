@@ -24,6 +24,7 @@ parser.add_argument("--integrator", type=str, default="euler", dest="integrator"
 
 ### Functions ###
 def gravitational_force(bodyself):
+    bodyself.sum_forces = vector(0,0,0)
     # calculate the gravitational force from all other bodies
     for body in bodies:
         # distance to the other body
@@ -42,10 +43,10 @@ def gravitational_force(bodyself):
 
 ### Integrators ###
 
+# Euler Integrator
 def Euler():
     # acceleration and velocity calculations
     for body in bodies:
-        body.sum_forces = vector(0,0,0)
         gravitational_force(body)
 
         body.acc = body.sum_forces/body.mass
@@ -59,12 +60,22 @@ def Euler():
         body.sphere.pos = body.position
         body.label.pos = body.position
 
-
+# Runge-Kutta 4 (RK4) Integrator
 def Runge_Kutta():
     pass
 
+# Velocity-Verlet Integrator
 def Verlet():
-    pass
+    # position calculations
+    for body in bodies:
+        body.position += body.velocity * dt + body.acc/2 * dt**2
+        body.sphere.pos = body.position
+        body.label.pos = body.position
+    # acceleration and velocity calculations
+    for body in bodies:
+        gravitational_force(body)
+        body.velocity += dt/2*(body.acc + body.sum_forces/body.mass)
+        body.acc = body.sum_forces/body.mass
 
 # parse cmd arguments
 args = parser.parse_args()
@@ -116,11 +127,11 @@ class Body():
         self.mass = mass
         self.velocity = velocity
         self.position = position
+        self.sum_forces = vector(0,0,0)
         self.color = color
         self.radius = radius
-        self.forces = []
-        self.acc = vector(0,0,0)
-        self.sum_force = vector(0,0,0)
+        gravitational_force(self)
+        self.acc = self.sum_forces/self.mass # approximate the initial acceleration for Verlet
         self.name = name
         self.label = label(pos=self.position, text=self.name, height=10)
         if scale:
