@@ -18,24 +18,81 @@ parser.add_argument("--useconfig", action="store_true", default=False, dest="use
                     help="Use this flag if you want to use the settings in the configfile instead of defaults and cmd arguments. (Default: False)")
 # TODO Start
 parser.add_argument("--integrator", type=str, default="euler", dest="integrator", 
-                    help="The integrator to be used. Options: euler, verlet, runge (Default: euler)")
+                    help="The integrator to be used. Options: euler, verlet, rk4 (Default: euler)")
 
 # TODO End
 
+### Functions ###
+def gravitational_force(bodyself):
+    # calculate the gravitational force from all other bodies
+    for body in bodies:
+        # distance to the other body
+        r = mag(bodyself.position-body.position)
+        # skip if body is itself
+        if r < bodyself.radius+body.radius:
+            continue
+        # the magnitude of the force
+        force = G * bodyself.mass * body.mass / r**2
+        # the unit vector for the force
+        dir = norm(body.position - bodyself.position)
+        # the force vector
+        force = force * dir
+        # add force vector to the sum of forces
+        bodyself.sum_forces += force
+
+### Integrators ###
+
+def Euler():
+    # acceleration and velocity calculations
+    for body in bodies:
+        body.sum_forces = vector(0,0,0)
+        gravitational_force(body)
+
+        body.acc = body.sum_forces/body.mass
+        body.velocity += dt * body.acc
+
+    # position calculations
+    for body in bodies:
+        body.position += dt * body.velocity
+        
+        # update position of graphics
+        body.sphere.pos = body.position
+        body.label.pos = body.position
+
+
+def Runge_Kutta():
+    pass
+
+def Verlet():
+    pass
+
+# parse cmd arguments
 args = parser.parse_args()
 
+# load config json file
 with open(args.configfile, "r") as configfile:
     config = json.load(configfile)
 
+# use configurations from config json file
 if args.useconfig:
     dt = config[1]["dt"]
     scale_factor = config[1]["scale_factor"]
     end_time = config[1]["time"]
+    integrator = config[1]["integrator"]
+# use argument configurations
 else:
     dt = args.dt
     scale_factor = args.scale
     end_time = args.time
+    integrator = args.integrator
 
+# check which integrator was chosen
+if integrator == "euler":
+    integrator = Euler
+elif integrator == "rk4":
+    integrator = Runge_Kutta
+elif integrator == "verlet":
+    integrator = Verlet
 
 # UNITS:
 # Mass: solar mass 
@@ -47,10 +104,9 @@ else:
 #dt = 0.01
 
 G = 2.9592e-04
-time = 0
-
 AU = 1.5e11
 M = 2e30
+time = 0
 
 # list of all the bodies in the simulation
 bodies = []
@@ -72,43 +128,6 @@ class Body():
         else:
             self.sphere = sphere(pos=self.position, color=self.color, radius=self.radius, make_trail=trail, retain=200)
         #bodies.append(self) # uncomment if you want automatic adding to bodies list
-    def update(self):
-        self.forces = []
-        self.sum_force = vector(0,0,0)
-        self.gravitational_force()
-        # add other forces here
-        
-        # sum all forces (Newtons Second Law)
-        for force in self.forces:
-            self.sum_force += force
-        
-        # Euler method
-        self.acc = self.sum_force/self.mass
-        self.velocity += dt * self.acc
-    
-    def move(self):
-        self.position += dt * self.velocity
-        
-        # update position of graphics
-        self.sphere.pos = self.position
-        self.label.pos = self.position
-        
-    def gravitational_force(self):
-        # calculate the gravitational force from all other bodies
-        for body in bodies:
-            # distance to the other body
-            r = mag(self.position-body.position)
-            # skip if body is itself
-            if r < self.radius+body.radius:
-                continue
-            # the magnitude of the force
-            force = G * self.mass * body.mass / r**2
-            # the unit vector for the force
-            dir = norm(body.position - self.position)
-            # the force vector
-            force = force * dir
-            # add force vector to list of forces
-            self.forces.append(force)
     
     # this function is an alternative to the Euler integration
     def updateVerlet(self):
@@ -276,12 +295,9 @@ time_label = label(pos=vector(75, 350, 0), pixel_pos=True, text="Time: " + str(t
 if end_time > 0:
     for epoch in range(int(end_time/dt)):
         rate(args.rate)
-        # calculate the change in velocity for all bodies...
-        for body in bodies:
-            body.update()
-        # ... then move all bodies
-        for body in bodies:
-            body.move()
+        
+        integrator()
+
         time = epoch*dt
         time_label.text = "Time: {:.2f} years".format(time/365)
         
@@ -289,12 +305,9 @@ if end_time > 0:
 else:
     while True:
         rate(args.rate)
-        # calculate the change in velocity for all bodies...
-        for body in bodies:
-            body.update()
-        # ... then move all bodies
-        for body in bodies:
-            body.move()
+        
+        integrator()
+        
         time_label.text = "Time: {:.2f} years".format(time/365)
         time += dt
 
