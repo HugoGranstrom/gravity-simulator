@@ -16,11 +16,9 @@ parser.add_argument("--configfile", type=str, default="config.json", dest="confi
                     help="Path to the config file containing the bodies. (Default: config.json)")
 parser.add_argument("--useconfig", action="store_true", default=False, dest="useconfig",
                     help="Use this flag if you want to use the settings in the configfile instead of defaults and cmd arguments. (Default: False)")
-# TODO Start
 parser.add_argument("--integrator", type=str, default="euler", dest="integrator", 
                     help="The integrator to be used. Options: euler, verlet, rk4 (Default: euler)")
 
-# TODO End
 
 ### Functions ###
 def gravitational_force(bodyself):
