@@ -4,20 +4,20 @@ import json
 
 # argument parsing
 parser = argparse.ArgumentParser(description="A newtonian gravity simulator")
-parser.add_argument("-t", "--time", type=float, default=0, dest="time", 
+parser.add_argument("-t", "--time", type=float, default=0, dest="time",
                     help="The amount of time the simulation will simulate measured in days. Type 0 for infinite time. (Default: 0)")
 parser.add_argument("--dt", type=float, default=0.01, dest="dt",
                     help="The timestep to use. (Default: 0.01)")
 parser.add_argument("--scale", type=float, default=1000, dest="scale",
                     help="The number to scale the radiuses of the planets to make them visible. Does only affect the visuals not collisions. (Default: 1000)")
-parser.add_argument("--rate", type=int, default=10000, dest="rate", 
+parser.add_argument("--rate", type=int, default=10000, dest="rate",
                     help="Number of timesteps per second (Default: 10000)")
 parser.add_argument("--configfile", type=str, default="config.json", dest="configfile",
                     help="Path to the config file containing the bodies. (Default: config.json)")
 parser.add_argument("--useconfig", action="store_true", default=False, dest="useconfig",
                     help="Use this flag if you want to use the settings in the configfile instead of defaults and cmd arguments. (Default: False)")
 # TODO Start
-parser.add_argument("--integrator", type=str, default="euler", dest="integrator", 
+parser.add_argument("--integrator", type=str, default="euler", dest="integrator",
                     help="The integrator to be used. Options: euler, verlet, runge (Default: euler)")
 
 # TODO End
@@ -38,7 +38,7 @@ else:
 
 
 # UNITS:
-# Mass: solar mass 
+# Mass: solar mass
 # Length: Astronomical unit
 # Time: days
 # G = 4pi^2*AU^3/(M * 365.25) => G = 4*pi^2/365.25^2
@@ -56,7 +56,7 @@ M = 2e30
 bodies = []
 
 class Body():
-    def __init__(self, mass=1, radius=1, velocity=vector(0,0,0), position=vector(0,0,0), color=color.white, trail=True, name="Body", scale=True):
+    def __init__(self, mass=1, radius=1, velocity=vector(0,0,0), position=vector(0,0,0), color=color.white, trail=True, name="Body", scale=True, index=0):
         self.mass = mass
         self.velocity = velocity
         self.position = position
@@ -67,32 +67,33 @@ class Body():
         self.sum_force = vector(0,0,0)
         self.name = name
         self.label = label(pos=self.position, text=self.name, height=10)
+        self.index = index
         if scale:
-            self.sphere = sphere(pos=self.position, color=self.color, radius=self.radius*scale_factor, make_trail=trail, retain=200)
+            self.sphere = sphere(pos=self.position, color=self.color, radius=self.radius*scale_factor, make_trail=trail, retain=200, index=self.index)
         else:
-            self.sphere = sphere(pos=self.position, color=self.color, radius=self.radius, make_trail=trail, retain=200)
+            self.sphere = sphere(pos=self.position, color=self.color, radius=self.radius, make_trail=trail, retain=200, index=self.index)
         #bodies.append(self) # uncomment if you want automatic adding to bodies list
     def update(self):
         self.forces = []
         self.sum_force = vector(0,0,0)
         self.gravitational_force()
         # add other forces here
-        
+
         # sum all forces (Newtons Second Law)
         for force in self.forces:
             self.sum_force += force
-        
+
         # Euler method
         self.acc = self.sum_force/self.mass
         self.velocity += dt * self.acc
-    
+
     def move(self):
         self.position += dt * self.velocity
-        
+
         # update position of graphics
         self.sphere.pos = self.position
         self.label.pos = self.position
-        
+
     def gravitational_force(self):
         # calculate the gravitational force from all other bodies
         for body in bodies:
@@ -109,26 +110,26 @@ class Body():
             force = force * dir
             # add force vector to list of forces
             self.forces.append(force)
-    
+
     # this function is an alternative to the Euler integration
     def updateVerlet(self):
         self.forces = []
         self.sum_force = vector(0,0,0)
         self.gravitational_force()
         # add other forces here
-        
+
         # sum the forces
         for force in self.forces:
             self.sum_force += force
-        
-        
+
+
         self.position += self.velocity * dt + self.acc/2 * dt**2
         self.velocity += dt/2*(self.acc + self.sum_force/self.mass)
         self.acc = self.sum_force/self.mass
-        
+
         self.sphere.pos = self.position
         self.label.pos = self.position
-        
+
 
 def color_to_vector(color_list):
     return vector(color_list[0]/255, color_list[1]/255, color_list[2]/255)
@@ -144,7 +145,8 @@ for body in config[0]:
         velocity = vector(body["velocity"][0], body["velocity"][1], body["velocity"][2]),
         trail = body["trail"],
         color = color_to_vector(body["color"]),
-        scale = body["scale"]
+        scale = body["scale"],
+        index=len(bodies)
     ))
 
 # create all bodies in the simulation
@@ -260,7 +262,7 @@ pluto = Body(
 #                   position=vector(15, -20, 0),
 #                   velocity=vector(0, 0.5, 0),
 # )
-               
+
 # hole = Body(#mass=2e30*4.3e6,
            # mass=2e30*10,
            # radius=7e8 * 20,
@@ -270,7 +272,19 @@ pluto = Body(
            # trail=False,
            # )
 
-time_label = label(pos=vector(75, 350, 0), pixel_pos=True, text="Time: " + str(time/365) + " years")
+time_label = label(pos=vector(20, 350, 0), pixel_pos=True, align='left', text="Time: " + str(time/365) + " years")
+
+### info box ###
+info_label = label(pos=vector(20, scene.height/3, 0), pixel_pos=True, box=False, align='left', text="<i>Info box</i>\n")
+
+def onClick(e):
+    obj = scene.mouse.pick
+    if(obj != None):
+        body = bodies[obj.index]
+        info_label.text = '<i>'+body.name+'</i>\n<b>Mass:</b> '+str(body.mass)+' M☉\n'
+
+scene.bind('click', onClick)
+### ###
 
 # loop over every body and run its update method every timestep
 if end_time > 0:
@@ -296,5 +310,3 @@ else:
             body.move()
         time_label.text = "Time: {:.2f} years".format(time/365)
         time += dt
-
-    
