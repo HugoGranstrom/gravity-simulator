@@ -3,6 +3,9 @@ A newtonian brute force gravity simulator of the solar system written in Python/
 
 Run ``python gravity.py`` to run the simulation.
 
+# Usage
+
+
 # TODO
 - Make documentation
 
