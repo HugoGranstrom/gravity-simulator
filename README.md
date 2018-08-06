@@ -9,7 +9,7 @@ The units used in the simulation is Astronomical Units (AU) for length, Solar ma
 
 ## config.json
 
-### Planets
+#### Planets
 Every planet is configured in ``config.json`` by default. The current attributes that a planet has is:
 - ``name`` - the name that will be displayed over the planet.
 - ``mass`` - the mass of the planet measured in solar masses.
@@ -20,7 +20,7 @@ Every planet is configured in ``config.json`` by default. The current attributes
 - ``trail`` - set to ``true`` if the planet should show a trail after itself. If not set to ``false``.
 - ``scale`` - set to ``true`` if you want to scale the visual radius (the one used in calculations is still the same as ``radius``) of the planet by ``scale_factor`` to make it easier to see. For big planets (eg the sun in a solar system) set it to ``false``.
 
-### Simulation Settings
+#### Simulation Settings
 
 
 # TODO
