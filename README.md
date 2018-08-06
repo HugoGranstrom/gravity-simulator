@@ -8,6 +8,8 @@ To run the default configuration (dt=0.01, integrator=euler, infinite loop, the 
 The units used in the simulation is Astronomical Units (AU) for length, Solar masses (M☉) for mass and Days for time. 
 
 ## config.json
+
+### Planets
 Every planet is configured in ``config.json`` by default. The current attributes that a planet has is:
 - ``name`` - the name that will be displayed over the planet.
 - ``mass`` - the mass of the planet measured in solar masses.
@@ -17,6 +19,8 @@ Every planet is configured in ``config.json`` by default. The current attributes
 - ``color`` - the color the planet and its trail will have. Given as a array/list of RGB values in the range(0, 255): [red, blue, green].
 - ``trail`` - set to ``true`` if the planet should show a trail after itself. If not set to ``false``.
 - ``scale`` - set to ``true`` if you want to scale the visual radius (the one used in calculations is still the same as ``radius``) of the planet by ``scale_factor`` to make it easier to see. For big planets (eg the sun in a solar system) set it to ``false``.
+
+### Simulation Settings
 
 
 # TODO
