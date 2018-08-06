@@ -138,25 +138,6 @@ class Body():
         else:
             self.sphere = sphere(pos=self.position, color=self.color, radius=self.radius, make_trail=trail, retain=200, index=self.index)
         #bodies.append(self) # uncomment if you want automatic adding to bodies list
-    
-    # this function is an alternative to the Euler integration
-    def updateVerlet(self):
-        self.forces = []
-        self.sum_force = vector(0,0,0)
-        self.gravitational_force()
-        # add other forces here
-
-        # sum the forces
-        for force in self.forces:
-            self.sum_force += force
-
-
-        self.position += self.velocity * dt + self.acc/2 * dt**2
-        self.velocity += dt/2*(self.acc + self.sum_force/self.mass)
-        self.acc = self.sum_force/self.mass
-
-        self.sphere.pos = self.position
-        self.label.pos = self.position
 
 
 def color_to_vector(color_list):
