@@ -1,6 +1,7 @@
 from vpython import *
 import argparse
 import json
+from collections import namedtuple
 
 # argument parsing
 parser = argparse.ArgumentParser(description="A newtonian gravity simulator")
@@ -20,24 +21,49 @@ parser.add_argument("--integrator", type=str, default="euler", dest="integrator"
                     help="The integrator to be used. Options: euler, verlet, rk4 (Default: euler)")
 
 
+### containerVector ###
+conVec = namedtuple("conVec","x y")
+
 ### Functions ###
-def gravitational_force(bodyself):
-    bodyself.sum_forces = vector(0,0,0)
-    # calculate the gravitational force from all other bodies
+# gravitational acceleration for Euler and Verlet
+def gravitational_acc(position):
+    sum_acc = vector(0,0,0)
+    # calculate the gravitational acceleration from all other bodies
     for body in bodies:
         # distance to the other body
-        r = mag(bodyself.position-body.position)
+        r = mag(position-body.position)
         # skip if body is itself
-        if r < bodyself.radius+body.radius:
+        if r < body.radius:
             continue
         # the magnitude of the force
-        force = G * bodyself.mass * body.mass / r**2
+        acc = G * body.mass / r**2
         # the unit vector for the force
-        dir = norm(body.position - bodyself.position)
+        dir = norm(body.position - position)
         # the force vector
-        force = force * dir
+        acc = acc * dir
         # add force vector to the sum of forces
-        bodyself.sum_forces += force
+        sum_acc += acc
+    return sum_acc
+
+# gravitational acceleration for Runge-Kutta
+def gravitational_acc_runge(xv):
+    sum_acc = vector(0,0,0)
+    # calculate the gravitational acceleration from all other bodies
+    for body in bodies:
+        # distance to the other body
+        r = mag(xv.x-body.temp_position)
+        # skip if body is itself
+        if r < body.radius:
+            continue
+        # the magnitude of the force
+        acc = G * body.mass / r**2
+        # the unit vector for the force
+        dir = norm(body.temp_position - xv.x)
+        # the force vector
+        acc = acc * dir
+        # add force vector to the sum of forces
+        sum_acc += acc
+    return conVec(xv.y, sum_acc)
 
 ### Integrators ###
 
@@ -45,9 +71,9 @@ def gravitational_force(bodyself):
 def Euler():
     # acceleration and velocity calculations
     for body in bodies:
-        gravitational_force(body)
-
-        body.acc = body.sum_forces/body.mass
+        if body.name == "Earth":
+            print(body.position)
+        body.acc = gravitational_acc(body.position)
         body.velocity += dt * body.acc
 
     # position calculations
@@ -60,7 +86,56 @@ def Euler():
 
 # Runge-Kutta 4 (RK4) Integrator
 def Runge_Kutta():
-    pass
+    
+    # calculate k1
+    for body in bodies:
+        body.k = [0] # zero at beginning to push indices one step up for readability
+        body.temp_position = body.position
+        body.xv = conVec(body.temp_position, body.velocity)
+        temp_k1 = gravitational_acc_runge(body.xv)
+        k1 = conVec(temp_k1.x * dt, temp_k1.y * dt)
+        body.k.append(k1)
+        
+    # move temp_pos according to k1
+    for body in bodies:
+        body.temp_position = body.position + body.k[1].x/2
+    
+    # calculate k2
+    for body in bodies:
+        temp_xv = conVec(body.xv.x + body.k[1].x/2, body.xv.y + body.k[1].y/2)
+        temp_k2 = gravitational_acc_runge(temp_xv)
+        k2 = conVec(temp_k2.x * dt, temp_k2.y * dt)
+        body.k.append(k2)
+    
+    # move temp_pos according to k2
+    for body in bodies:
+        body.temp_position = body.position + body.k[2].x/2
+
+    # calculate k3
+    for body in bodies:
+        temp_xv = conVec(body.xv.x + body.k[2].x/2, body.xv.y + body.k[2].y/2)
+        temp_k3 = gravitational_acc_runge(temp_xv)
+        k3 = conVec(temp_k3.x * dt, temp_k3.y * dt)
+        body.k.append(k3)
+    
+    # move temp_pos according to k3
+    for body in bodies:
+        body.temp_position = body.position + body.k[3].x
+
+    # calculate k4
+    for body in bodies:
+        temp_xv = conVec(body.xv.x + body.k[3].x, body.xv.y + body.k[3].y)
+        temp_k4 = gravitational_acc_runge(temp_xv)
+        k4 = conVec(temp_k4.x * dt, temp_k4.y * dt)
+        body.k.append(k4)
+
+    # calculate weighted sum and move bodies
+    for body in bodies:
+        body.position += 1/6 * (body.k[1].x + 2*body.k[2].x + 2*body.k[3].x + body.k[4].x)
+        body.velocity += 1/6 * (body.k[1].y + 2*body.k[2].y + 2*body.k[3].y + body.k[4].y)
+
+        body.sphere.pos = body.position
+        body.label.pos = body.position
 
 # Velocity-Verlet Integrator
 def Verlet():
@@ -71,9 +146,9 @@ def Verlet():
         body.label.pos = body.position
     # acceleration and velocity calculations
     for body in bodies:
-        gravitational_force(body)
-        body.velocity += dt/2*(body.acc + body.sum_forces/body.mass)
-        body.acc = body.sum_forces/body.mass
+        temp_acc = gravitational_acc(body.position)
+        body.velocity += dt/2*(body.acc + temp_acc)
+        body.acc = temp_acc
 
 # parse cmd arguments
 args = parser.parse_args()
@@ -125,11 +200,13 @@ class Body():
         self.mass = mass
         self.velocity = velocity
         self.position = position
+        self.temp_position = vector(0,0,0)
+        self.k = []
+        self.xv = conVec(0,0)
         self.sum_forces = vector(0,0,0)
         self.color = color
         self.radius = radius
-        gravitational_force(self)
-        self.acc = self.sum_forces/self.mass # approximate the initial acceleration for Verlet
+        self.acc = gravitational_acc(self.position) # approximate the initial acceleration for Verlet
         self.name = name
         self.label = label(pos=self.position, text=self.name, height=10)
         self.index = index
@@ -145,7 +222,6 @@ def color_to_vector(color_list):
 
 
 for body in config[0]:
-    print(body["name"])
     bodies.append(Body(
         name = body["name"],
         mass = body["mass"],
@@ -302,7 +378,7 @@ scene.bind('click', onClick)
 if end_time > 0:
     for epoch in range(int(end_time/dt)):
         rate(args.rate)
-        
+
         integrator()
 
         time = epoch*dt
