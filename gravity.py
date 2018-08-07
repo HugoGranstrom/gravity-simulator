@@ -369,6 +369,8 @@ def onClick(e):
         # info about the planets can noe be retrieved from the class
         info_label.text = '<b><i>'+body.name+'</i></b>\n<i>Mass:</i> '+str(body.mass)+' M☉\n'
         # TODO add more info about planets & convert units
+    else:
+        info_label.text = ''
 
 
 scene.bind('click', onClick)
