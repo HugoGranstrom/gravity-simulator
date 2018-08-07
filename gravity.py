@@ -19,6 +19,10 @@ parser.add_argument("--useconfig", action="store_true", default=False, dest="use
                     help="Use this flag if you want to use the settings in the configfile instead of defaults and cmd arguments. (Default: False)")
 parser.add_argument("--integrator", type=str, default="euler", dest="integrator", 
                     help="The integrator to be used. Options: euler, verlet, rk4 (Default: euler)")
+parser.add_argument("--endPos", action="store_true", default=False, dest="printEndPos",
+                    help="When flagged the end position of all bodies will be printed (Deafult: False)")
+parser.add_argument("--checkEndPos", action="store_true", default=False, dest="checkEndPos",
+                    help="When flagged the end position of all bodies is compared to their real end positions, which are given as 'end_position' in config.json (Default: False)")
 
 
 ### containerVector ###
@@ -71,8 +75,6 @@ def gravitational_acc_runge(xv):
 def Euler():
     # acceleration and velocity calculations
     for body in bodies:
-        if body.name == "Earth":
-            print(body.position)
         body.acc = gravitational_acc(body.position)
         body.velocity += dt * body.acc
 
@@ -385,6 +387,22 @@ if end_time > 0:
 
         time = epoch*dt
         time_label.text = "Time: {:.2f} years".format(time/365)
+    # print body positions for benchmarking
+    if args.printEndPos:
+        for body in bodies:
+            print(f"{body.name}: {body.position}")
+    if args.checkEndPos:
+        error_sum = 0
+        for body in bodies:
+            end_pos = config[0][body.index]["end_position"]
+            # make vector from end_pos (list)
+            error = mag(body.position - end_pos) # the magnitude of the error
+            error_sum += error
+            print(f"{body.name}: {error} AU")
+        print(f"Total error: {error_sum}")
+        print(f"dt: {dt}")
+        print(f"Integrator: {args.integrator}")
+
         
 
 else:
