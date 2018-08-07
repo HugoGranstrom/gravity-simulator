@@ -25,7 +25,6 @@ Every planet is configured in ``config.json`` by default. The current attributes
 
 # TODO
 - Make documentation
-- Runge-Kutta Integrator
 - Benchmark: compare execution time and accuracy 
 
 ## Contribution
