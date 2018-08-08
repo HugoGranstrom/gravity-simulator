@@ -11,14 +11,14 @@ parser.add_argument("--dt", type=float, default=0.01, dest="dt",
                     help="The timestep to use. (Default: 0.01)")
 parser.add_argument("--scale", type=float, default=1000, dest="scale",
                     help="The number to scale the radiuses of the planets to make them visible. Does only affect the visuals not collisions. (Default: 1000)")
-parser.add_argument("--rate", type=int, default=10000, dest="rate",
-                    help="Number of timesteps per second (Default: 10000)")
+parser.add_argument("--rate", type=int, default=100000, dest="rate",
+                    help="Number of timesteps per second (Default: 100000)")
 parser.add_argument("--configfile", type=str, default="config.json", dest="configfile",
                     help="Path to the config file containing the bodies. (Default: config.json)")
 parser.add_argument("--useconfig", action="store_true", default=False, dest="useconfig",
                     help="Use this flag if you want to use the settings in the configfile instead of defaults and cmd arguments. (Default: False)")
 parser.add_argument("--integrator", type=str, default="euler", dest="integrator", 
-                    help="The integrator to be used. Options: euler, verlet, rk4 (Default: euler)")
+                    help="The integrator to be used. Options: euler, verlet, rk4, fr, pefrl (Default: euler)")
 parser.add_argument("--endPos", action="store_true", default=False, dest="printEndPos",
                     help="When flagged the end position of all bodies will be printed (Deafult: False)")
 parser.add_argument("--checkEndPos", action="store_true", default=False, dest="checkEndPos",
@@ -152,6 +152,49 @@ def Verlet():
         body.velocity += dt/2*(body.acc + temp_acc)
         body.acc = temp_acc
 
+def Forest_Ruth():
+    for body in bodies:
+        body.position += Theta*dt/2*body.velocity
+    for body in bodies:
+        body.velocity += Theta*dt*gravitational_acc(body.position)
+    for body in bodies:
+        body.position += (1-Theta)*dt/2*body.velocity
+    for body in bodies:
+        body.velocity += (1-2*Theta)*dt*gravitational_acc(body.position)
+    for body in bodies:
+        body.position += (1-Theta)*dt/2*body.velocity
+    for body in bodies:
+        body.velocity += Theta*dt*gravitational_acc(body.position)
+    for body in bodies:
+        body.position += Theta*dt/2*body.velocity
+        body.sphere.pos = body.position
+        body.label.pos = body.position
+
+
+def PEFRL():
+    for body in bodies:
+        body.position += Epsilon*dt*body.velocity
+    for body in bodies:
+        body.velocity += (1-2*Lambda)*dt/2*gravitational_acc(body.position)
+    for body in bodies:
+        body.position += Chi*dt*body.velocity
+    for body in bodies:
+        body.velocity += Lambda*dt*gravitational_acc(body.position)
+    for body in bodies:
+        body.position += (1-2*(Chi+Epsilon))*dt*body.velocity
+    for body in bodies:
+        body.velocity += Lambda*dt*gravitational_acc(body.position)
+    for body in bodies:
+        body.position += Chi*dt*body.velocity
+    for body in bodies:
+        body.velocity += (1-2*Lambda)*dt/2*gravitational_acc(body.position)
+    for body in bodies:
+        body.position += Epsilon*dt*body.velocity
+        body.sphere.pos = body.position
+        body.label.pos = body.position
+
+### End Integrators ###
+
 # parse cmd arguments
 args = parser.parse_args()
 
@@ -185,12 +228,16 @@ else:
     integrator = args.integrator
 
 # check which integrator was chosen
-if integrator == "euler":
+if integrator.lower() == "euler":
     integrator = Euler
-elif integrator == "rk4":
+elif integrator.lower() == "rk4":
     integrator = Runge_Kutta
-elif integrator == "verlet":
+elif integrator.lower() == "verlet":
     integrator = Verlet
+elif integrator.lower() == "fr":
+    integrator = Forest_Ruth
+elif integrator.lower() == "pefrl":
+    integrator = PEFRL
 
 # UNITS:
 # Mass: solar mass
@@ -201,10 +248,17 @@ elif integrator == "verlet":
 #scale_factor = 1000
 #dt = 0.01
 
+### Constants ###
+
 G = 2.9592e-04
 AU = 1.5e11
 M = 2e30
-time = 0
+Theta = 1/(2-2**(1/3))
+Epsilon = 0.1786178958448091
+Lambda = -0.2123418310626054
+Chi = -0.6626458266981849E-01
+
+
 
 # list of all the bodies in the simulation
 bodies = []
@@ -371,7 +425,9 @@ pluto = Body(
            # trail=False,
            # )
 
-time_label = label(pos=vector(20, 350, 0), pixel_pos=True, align='left', text="Time: " + str(time/365) + " years")
+current_time = 0
+
+time_label = label(pos=vector(20, 350, 0), pixel_pos=True, align='left', text="Time: " + str(current_time/365) + " years")
 
 ### info box ###
 info_label = label(pos=vector(20, scene.height/3, 0), pixel_pos=True, box=False, align='left', text="")
@@ -391,14 +447,15 @@ scene.bind('click', onClick)
 ### ###
 
 # loop over every body and run its update method every timestep
+
 if end_time > 0:
     for epoch in range(int(end_time/dt)):
         rate(args.rate)
 
         integrator()
 
-        time = epoch*dt
-        time_label.text = "Time: {:.2f} years".format(time/365)
+        current_time = epoch*dt
+        time_label.text = "Time: {:.2f} years".format(current_time/365)
     # print body positions for benchmarking
     if args.printEndPos:
         for body in bodies:
@@ -423,5 +480,5 @@ else:
         
         integrator()
         
-        time_label.text = "Time: {:.2f} years".format(time/365)
-        time += dt
+        time_label.text = "Time: {:.2f} years".format(current_time/365)
+        current_time += dt
