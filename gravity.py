@@ -407,7 +407,7 @@ if end_time > 0:
         error_sum = 0
         for body in bodies:
             end_pos = config[0][body.index]["end_position"]
-            # make vector from end_pos (list)
+            end_pos = vector(end_pos[0], end_pos[1], end_pos[2])
             error = mag(body.position - end_pos) # the magnitude of the error
             error_sum += error
             print(f"{body.name}: {error} AU")
