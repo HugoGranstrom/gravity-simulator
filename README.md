@@ -2,12 +2,51 @@
 A newtonian brute force gravity simulator of the solar system written in Python/Vpython. 
 
 # Usage
-To run the default configuration (dt=0.01, integrator=euler, infinite loop, the sun and 9 planets) run ``python gravity.py`` to run the simulation.
+To run the default configuration (dt=0.01, integrator=euler, infinite loop, the sun and 9 planets) run ``python gravity.py`` to run the simulation. It will open up a browser window and it will show the simulation there. You can navigate the scene with these controls:
+- Zoom: scroll while your mouse pointer is above the simulation window.
+- Pan: SHIFT + LEFT MOUSE BUTTON.
+- Rotate: hold RIGHT MOUSE BUTTON
+- Resize window: drag in the lower left corner of the simulation. 
 
 ## Units
 The units used in the simulation is Astronomical Units (AU) for length, Solar masses (M☉) for mass and Days for time. 
 
 ## config.json
+The config.json file (you can choose another name if you like) is where you store the initial position, initial velocities, mass, name etc of your planets and bodies and optionally parameters for the simulation which can be used by adding ``--useconfig`` to the run-command. It is structured like this:
+
+`` json
+[
+    [
+        // list of planet objects 
+        {
+            "name": "Earth",
+            "mass": 3e-06,
+            "radius": 4.247333333333333e-05,
+            "position": [-5.111702950987252E-01, -8.734341386147972E-01, 3.902531498407046E-05],
+            "velocity": [1.457401965494037E-02, -8.749957786090569E-03, -3.393201214360642E-07],
+            "color": [0, 255, 0],
+            "trail": true,
+            "scale": true
+        },
+        {
+            "name": "Mercury",
+            "mass": 1.65e-07,
+            "radius": 4e-05,
+            "position": [3.600062387312980E-01, -8.310671431721671E-02, -3.981766501010686E-02],
+            "velocity": [8.732371820239134E-04, 2.867508157942580E-02, 2.263026727476856E-03],
+            "color": [255, 0, 0],
+            "trail": true,
+            "scale": true
+        }
+        // more planets here
+    ],
+    [
+        "dt": 0.01,
+        integrator: "euler"
+        // more settings here
+    ]
+]
+``
 
 #### Planets
 Every planet is configured in ``config.json`` by default. The current attributes that a planet has is:
