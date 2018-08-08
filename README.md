@@ -26,6 +26,8 @@ Every planet is configured in ``config.json`` by default. The current attributes
 # TODO
 - Make documentation
 - Benchmark: compare execution time and accuracy 
+- Implement Forest Ruth (FR) and Position
+Extended Forest-Ruth Like (PEFRL) integrators
 
 ## Contribution
 Feel free to submit pull request for improvements or additions. It makes it easier if you open an Issue first so we can discuss a good implementation of your feature.
