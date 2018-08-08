@@ -14,7 +14,7 @@ The units used in the simulation is Astronomical Units (AU) for length, Solar ma
 ## config.json
 The config.json file (you can choose another name if you like) is where you store the initial position, initial velocities, mass, name etc of your planets and bodies and optionally parameters for the simulation which can be used by adding ``--useconfig`` to the run-command. It is structured like this:
 
-`` json
+``` javascript
 [
     [
         // list of planet objects 
@@ -42,11 +42,11 @@ The config.json file (you can choose another name if you like) is where you stor
     ],
     [
         "dt": 0.01,
-        integrator: "euler"
+        "integrator": "euler"
         // more settings here
     ]
 ]
-``
+```
 
 #### Planets
 Every planet is configured in ``config.json`` by default. The current attributes that a planet has is:
