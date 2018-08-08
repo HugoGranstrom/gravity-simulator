@@ -161,10 +161,22 @@ with open(args.configfile, "r") as configfile:
 
 # use configurations from config json file
 if args.useconfig:
-    dt = config[1]["dt"]
-    scale_factor = config[1]["scale_factor"]
-    end_time = config[1]["time"]
-    integrator = config[1]["integrator"]
+    try:
+        dt = config[1]["dt"]
+    except:
+        dt = args.dt
+    try:
+        scale_factor = config[1]["scale_factor"]
+    except:
+        scale_factor = args.scale
+    try:
+        end_time = config[1]["time"]
+    except:
+        end_time = args.time
+    try:
+        integrator = config[1]["integrator"]
+    except:
+        integrator = args.integrator
 # use argument configurations
 else:
     dt = args.dt
