@@ -8,6 +8,18 @@ To run the default configuration (dt=0.01, integrator=euler, infinite loop, the 
 - Rotate: hold RIGHT MOUSE BUTTON
 - Resize window: drag in the lower left corner of the simulation. 
 
+## Options
+There are multiple command line arguments you can pass to the simulation:
+- `-t` or `--time`, the length of the simulation measured in days.
+- `--dt`, the timestep the simulation will use measured in days.
+- `--scale`, to make the simulation look better you can scale all planets with the property `"scale" = true` by a scale factor you specify here.
+- `--rate`,
+- `--configfile`,
+- `--useconfig`,
+- `--integrator`,
+- `--endPos`,
+- `--checkEndPos`,
+
 ## Units
 The units used in the simulation is Astronomical Units (AU) for length, Solar masses (M☉) for mass and Days for time. 
 
@@ -60,7 +72,7 @@ Every planet is configured in ``config.json`` by default. The current attributes
 - ``scale`` - set to ``true`` if you want to scale the visual radius (the one used in calculations is still the same as ``radius``) of the planet by ``scale_factor`` to make it easier to see. For big planets (eg the sun in a solar system) set it to ``false``.
 
 #### Simulation Settings
-
+If you want to share your simulation with someone else to let them run it on their computers it is handy to set your simulation settings in your ``config.json`` file because then all you have to do is to send them this file and they are ready to go. By default it is turned off, to use it, add ``--useconfig`` to your run-command like this: ``python gravity.py --useconfig``. Settings in your ``config.json`` file will have higher priority than those you pass through the command line. 
 
 # TODO
 - Make documentation
