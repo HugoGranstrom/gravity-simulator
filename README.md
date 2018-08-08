@@ -1,5 +1,5 @@
 # gravity-simulator
-A newtonian brute force gravity simulator of the solar system written in Python/Vpython. 
+A newtonian brute force gravity simulator of the solar system written in Python/Vpython. It is probably not too accurate so don't plan your rocket launch using it. It can be fun though to play around making your own solar systems (or throwing in a black hole in our own).
 
 # Usage
 To run the default configuration (dt=0.01, integrator=euler, infinite loop, the sun and 9 planets) run ``python gravity.py`` to run the simulation. It will open up a browser window and it will show the simulation there. To stop the simulation you close the browser tab, CTRL-C does not work. You can navigate the scene with these controls:
@@ -69,6 +69,7 @@ Every planet is configured in ``config.json`` by default. The current attributes
 - ``radius`` - the radius of the planet measured in AU.
 - ``position`` - the initial position vector. It is a 3D-vector and is given as a array/list: [x, y, z].
 - ``velocity`` - the initial velocity vector. It is a 3D-vector and is given as a array/list: [x, y, z].
+- ``end_position`` - used for benchmarking. Is the actual position of the planet when the simulation has ended.  
 - ``color`` - the color the planet and its trail will have. Given as a array/list of RGB values in the range(0, 255): [red, blue, green].
 - ``trail`` - set to ``true`` if the planet should show a trail after itself. If not set to ``false``.
 - ``scale`` - set to ``true`` if you want to scale the visual radius (the one used in calculations is still the same as ``radius``) of the planet by ``scale_factor`` to make it easier to see. For big planets (eg the sun in a solar system) set it to ``false``.
