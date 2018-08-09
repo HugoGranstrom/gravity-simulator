@@ -60,7 +60,7 @@ def gravitational_acc(position):
         if r < body.radius:
             continue
         # the magnitude of the force
-        acc = G * body.mass / r**2
+        acc = body.GM / r**2
         # the unit vector for the force
         dir = norm(body.position - position)
         # the force vector
@@ -80,7 +80,7 @@ def gravitational_acc_runge(xv):
         if r < body.radius:
             continue
         # the magnitude of the force
-        acc = G * body.mass / r**2
+        acc = body.GM / r**2
         # the unit vector for the force
         dir = norm(body.temp_position - xv.x)
         # the force vector
