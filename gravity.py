@@ -293,7 +293,7 @@ def color_to_vector(color_list):
 for body in config[0]:
     try:
         GM = body["gm"]
-    else:
+    except:
         GM = body["mass"] * G
     bodies.append(Body(
         name = body["name"],
