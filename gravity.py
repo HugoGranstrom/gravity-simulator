@@ -3,6 +3,7 @@ import argparse
 import json
 from collections import namedtuple
 
+
 # argument parsing
 parser = argparse.ArgumentParser(description="A newtonian gravity simulator")
 parser.add_argument("-t", "--time", type=float, default=0, dest="time",
@@ -24,6 +25,24 @@ parser.add_argument("--endPos", action="store_true", default=False, dest="printE
 parser.add_argument("--checkEndPos", action="store_true", default=False, dest="checkEndPos",
                     help="When flagged the end position of all bodies is compared to their real end positions, which are given as 'end_position' in config.json (Default: False)")
 
+# UNITS:
+# Mass: solar mass
+# Length: Astronomical unit
+# Time: days
+# G = 4pi^2*AU^3/(M * 365.25) => G = 4*pi^2/365.25^2
+#G = 6.67e-11
+#scale_factor = 1000
+#dt = 0.01
+
+### Constants ###
+
+G = 2.9592e-04
+AU = 1.5e11
+M = 2e30
+Theta = 1/(2-2**(1/3))
+Epsilon = 0.1786178958448091
+Lambda = -0.2123418310626054
+Chi = -0.6626458266981849E-01
 
 ### containerVector ###
 conVec = namedtuple("conVec","x y")
@@ -238,26 +257,6 @@ elif integrator.lower() == "fr":
     integrator = Forest_Ruth
 elif integrator.lower() == "pefrl":
     integrator = PEFRL
-
-# UNITS:
-# Mass: solar mass
-# Length: Astronomical unit
-# Time: days
-# G = 4pi^2*AU^3/(M * 365.25) => G = 4*pi^2/365.25^2
-#G = 6.67e-11
-#scale_factor = 1000
-#dt = 0.01
-
-### Constants ###
-
-G = 2.9592e-04
-AU = 1.5e11
-M = 2e30
-Theta = 1/(2-2**(1/3))
-Epsilon = 0.1786178958448091
-Lambda = -0.2123418310626054
-Chi = -0.6626458266981849E-01
-
 
 
 # list of all the bodies in the simulation
