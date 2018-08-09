@@ -4,51 +4,6 @@ import json
 from collections import namedtuple
 import time
 
-
-# argument parsing
-parser = argparse.ArgumentParser(description="A newtonian gravity simulator")
-parser.add_argument("-t", "--time", type=float, default=0, dest="time",
-                    help="The amount of time the simulation will simulate measured in days. Type 0 for infinite time. (Default: 0)")
-parser.add_argument("--dt", type=float, default=0.01, dest="dt",
-                    help="The timestep to use. (Default: 0.01)")
-parser.add_argument("--scale", type=float, default=1000, dest="scale",
-                    help="The number to scale the radiuses of the planets to make them visible. Does only affect the visuals not collisions. (Default: 1000)")
-parser.add_argument("--rate", type=int, default=100000, dest="rate",
-                    help="Number of timesteps per second (Default: 100000)")
-parser.add_argument("--configfile", type=str, default="config.json", dest="configfile",
-                    help="Path to the config file containing the bodies. (Default: config.json)")
-parser.add_argument("--useconfig", action="store_true", default=False, dest="useconfig",
-                    help="Use this flag if you want to use the settings in the configfile instead of defaults and cmd arguments. (Default: False)")
-parser.add_argument("--integrator", type=str, default="euler", dest="integrator", 
-                    help="The integrator to be used. Options: euler, verlet, rk4, fr, pefrl (Default: euler)")
-parser.add_argument("--endPos", action="store_true", default=False, dest="printEndPos",
-                    help="When flagged the end position of all bodies will be printed (Deafult: False)")
-parser.add_argument("--checkEndPos", action="store_true", default=False, dest="checkEndPos",
-                    help="When flagged the end position of all bodies is compared to their real end positions, which are given as 'end_position' in config.json (Default: False)")
-
-# UNITS:
-# Mass: solar mass
-# Length: Astronomical unit
-# Time: days
-# G = 4pi^2*AU^3/(M * 365.25) => G = 4*pi^2/365.25^2
-#G = 6.67e-11
-# AU^3/D^2 = 1/448485856027460.06  km^3/s^2 = 2.2297247205467538e-15 * km^3/s^2
-#scale_factor = 1000
-#dt = 0.01
-
-### Constants ###
-
-G = 2.9592e-04
-AU = 1.5e11
-M = 2e30
-Theta = 1/(2-2**(1/3))
-Epsilon = 0.1786178958448091
-Lambda = -0.2123418310626054
-Chi = -0.6626458266981849E-01
-
-### containerVector ###
-conVec = namedtuple("conVec","x y")
-
 ### Functions ###
 # gravitational acceleration for Euler and Verlet
 def gravitational_acc(position):
@@ -216,53 +171,7 @@ def PEFRL():
 
 ### End Integrators ###
 
-# parse cmd arguments
-args = parser.parse_args()
 
-# load config json file
-with open(args.configfile, "r") as configfile:
-    config = json.load(configfile)
-
-# use configurations from config json file
-if args.useconfig:
-    try:
-        dt = config[1]["dt"]
-    except:
-        dt = args.dt
-    try:
-        scale_factor = config[1]["scale_factor"]
-    except:
-        scale_factor = args.scale
-    try:
-        end_time = config[1]["time"]
-    except:
-        end_time = args.time
-    try:
-        integrator = config[1]["integrator"]
-    except:
-        integrator = args.integrator
-# use argument configurations
-else:
-    dt = args.dt
-    scale_factor = args.scale
-    end_time = args.time
-    integrator = args.integrator
-
-# check which integrator was chosen
-if integrator.lower() == "euler":
-    integrator = Euler
-elif integrator.lower() == "rk4":
-    integrator = Runge_Kutta
-elif integrator.lower() == "verlet":
-    integrator = Verlet
-elif integrator.lower() == "fr":
-    integrator = Forest_Ruth
-elif integrator.lower() == "pefrl":
-    integrator = PEFRL
-
-
-# list of all the bodies in the simulation
-bodies = []
 
 class Body():
     def __init__(self, mass=1, GM=1, radius=1, velocity=vector(0,0,0), position=vector(0,0,0), color=color.white, trail=True, name="Body", scale=True, index=0):
@@ -290,197 +199,198 @@ class Body():
 def color_to_vector(color_list):
     return vector(color_list[0]/255, color_list[1]/255, color_list[2]/255)
 
-
-for body in config[0]:
-    try:
-        GM = body["gm"]
-    except:
-        GM = body["mass"] * G
-    bodies.append(Body(
-        name = body["name"],
-        mass = body["mass"],
-        GM = GM,
-        radius = body["radius"],
-        position = vector(body["position"][0], body["position"][1], body["position"][2]),
-        velocity = vector(body["velocity"][0], body["velocity"][1], body["velocity"][2]),
-        trail = body["trail"],
-        color = color_to_vector(body["color"]),
-        scale = body["scale"],
-        index=len(bodies)
-    ))
-
-
-
-
-earth = Body(mass=6e24/M,
-             radius=6.371e6/AU,
-             #velocity=vector(0,3e4,0),
-             #position=vector(AU,0,0),
-             position=vector(-5.111702950987252E-01, -8.734341386147972E-01, 3.902531498407046E-05),
-             velocity=vector(1.457401965494037E-02, -8.749957786090569E-03, -3.393201214360642E-07),
-             color=color.green,
-             name="Earth"
-             )
-
-
-mercury = Body(
-               mass=earth.mass*0.055,
-               radius=6e6/AU,
-               #velocity=vector(0,4.7e4,0),
-               #position=vector(0.4*AU,0,0),
-               position=vector(3.600062387312980E-01, -8.310671431721671E-02, -3.981766501010686E-02),
-               velocity=vector(8.732371820239134E-04, 2.867508157942580E-02, 2.263026727476856E-03),
-               color=color.red,
-               name="Mercury",
-               )
-
-
-venus = Body(
-               mass=earth.mass*0.815,
-               radius=6e6/AU,
-               #velocity=vector(0,3.5e4,0),
-               #position=vector(0.7*AU,0,0),
-               position=vector(-5.460148756311848E-01, 4.654289630909307E-01, 3.789319798488837E-02),
-               velocity=vector(-1.319751648139675E-02, -1.549708277964608E-02, 5.490020542624818E-04),
-               color=color.white,
-               name="Venus",
-               )
-
-
-mars = Body(
-               mass=earth.mass*0.107,
-               radius=6e6/AU,
-               velocity=vector(1.444719742599419E-02,-2.365918534978303E-04,-3.594885612448260E-04),
-               position=vector(-1.508529480814324E-01,-1.460121856503524,-2.689190873994556E-02),
-               color=color.red,
-               name="Mars",
-               )
-
-
-jupiter = Body(
-               mass=earth.mass*318,
-               radius=7e7/AU,
-               velocity=vector(5.611682808441865E-03,-4.596785105938998E-03,-1.064356940327842E-04),
-               position=vector(-3.545075313382027,-4.081361865858232,9.627457319753692E-02),
-               color=color.blue,
-               name="Jupiter",
-               )
-
-
-saturn = Body(
-               mass=earth.mass*95,
-               radius=6e7/AU,
-               velocity=vector(5.262021976694793E-03,4.141890616120753E-04,-2.169327374705523E-04),
-               position=vector(7.842529344684837E-01,-1.003393486265119E+01,1.431896871358062E-01),
-               color=color.white,
-               name="Saturn",
-               )
-
-
-uranus = Body(
-               mass=earth.mass*14,
-               radius=2.5e7/AU,
-               velocity=vector(-1.905201349392400E-03,3.265505721711341E-03,3.669073443400500E-05),
-               position=vector(1.746114323983198E+01,9.517430938519276,-1.907513002050031E-01),
-               color=color.blue,
-               name="Uranus",
-               )
-
-
-neptune = Body(
-               mass=earth.mass*17,
-               radius=2.4e7/AU,
-               velocity=vector(8.427417626787077E-04,3.035037625808767E-03,-8.199842541642128E-05),
-               position=vector(2.880079206580985E+01,-8.173900363488711,-4.954784189728160E-01),
-               color=color.yellow,
-               name="Neptune",
-               )
-
-
-pluto = Body(
-               mass=earth.mass*0.0022,
-               radius=1e6/AU,
-               #velocity=vector(0,4.67e3,0),
-               #position=vector(39*AU,0,0),
-               position=vector(1.120198708794019E+01, -3.164123744663468E+01, 1.446313453325374E-01),
-               velocity=vector(3.029567845289497E-03, 3.743167934314588E-04, -9.260696937062970E-04),
-               color=color.yellow,
-               name="Pluto",
-               )
- """
-# black_hole = Body(
-#                   mass=4e6,
-#                   radius=2.5e7/AU,
-#                   color=color.white,
-#                   position=vector(15, -20, 0),
-#                   velocity=vector(0, 0.5, 0),
-# )
-
-# hole = Body(#mass=2e30*4.3e6,
-           # mass=2e30*10,
-           # radius=7e8 * 20,
-           # color=color.yellow,
-           # position=vector(5.2*AU,-39*AU,0),
-           # velocity=vector(0,100e3,0),
-           # trail=False,
-           # )
-
-current_time = 0
-
-time_label = label(pos=vector(20, 350, 0), pixel_pos=True, align='left', text="Time: " + str(current_time/365) + " years")
-
-### info box ###
-info_label = label(pos=vector(20, scene.height/3, 0), pixel_pos=True, box=False, align='left', text="")
-
 def onClick(e):
-    obj = scene.mouse.pick  # get the sphere
-    if(obj != None):
-        body = bodies[obj.index]  # each sphere has a index attribute wich points to the planets position in the bodies list
-        # info about the planets can noe be retrieved from the class
-        info_label.text = '<b><i>'+body.name+'</i></b>\n<i>Mass:</i> '+str(body.mass)+' M☉\n'
-        # TODO add more info about planets & convert units
+        obj = scene.mouse.pick  # get the sphere
+        if(obj != None):
+            body = bodies[obj.index]  # each sphere has a index attribute wich points to the planets position in the bodies list
+            # info about the planets can noe be retrieved from the class
+            info_label.text = '<b><i>'+body.name+'</i></b>\n<i>Mass:</i> '+str(body.mass)+' M☉\n'
+            # TODO add more info about planets & convert units
+        else:
+            info_label.text = ''
+
+def run():
+    # define globals
+    global args
+    global G
+    global AU
+    global M
+    global Theta
+    global Epsilon
+    global Lambda
+    global Chi
+    global conVec
+    global dt
+    global scale_factor
+    global end_time
+    global integrator
+    global bodies
+    global info_label
+
+    # argument parsing
+    parser = argparse.ArgumentParser(description="A newtonian gravity simulator")
+    parser.add_argument("-t", "--time", type=float, default=0, dest="time",
+                        help="The amount of time the simulation will simulate measured in days. Type 0 for infinite time. (Default: 0)")
+    parser.add_argument("--dt", type=float, default=0.01, dest="dt",
+                        help="The timestep to use. (Default: 0.01)")
+    parser.add_argument("--scale", type=float, default=1000, dest="scale",
+                        help="The number to scale the radiuses of the planets to make them visible. Does only affect the visuals not collisions. (Default: 1000)")
+    parser.add_argument("--rate", type=int, default=100000, dest="rate",
+                        help="Number of timesteps per second (Default: 100000)")
+    parser.add_argument("--configfile", type=str, default="config.json", dest="configfile",
+                        help="Path to the config file containing the bodies. (Default: config.json)")
+    parser.add_argument("--useconfig", action="store_true", default=False, dest="useconfig",
+                        help="Use this flag if you want to use the settings in the configfile instead of defaults and cmd arguments. (Default: False)")
+    parser.add_argument("--integrator", type=str, default="euler", dest="integrator", 
+                        help="The integrator to be used. Options: euler, verlet, rk4, fr, pefrl (Default: euler)")
+    parser.add_argument("--endPos", action="store_true", default=False, dest="printEndPos",
+                        help="When flagged the end position of all bodies will be printed (Deafult: False)")
+    parser.add_argument("--checkEndPos", action="store_true", default=False, dest="checkEndPos",
+                        help="When flagged the end position of all bodies is compared to their real end positions, which are given as 'end_position' in config.json (Default: False)")
+
+    # parse cmd arguments
+    args = parser.parse_args()
+
+
+    # UNITS:
+    # Mass: solar mass
+    # Length: Astronomical unit
+    # Time: days
+    # G = 4pi^2*AU^3/(M * 365.25) => G = 4*pi^2/365.25^2
+    #G = 6.67e-11
+    # AU^3/D^2 = 1/448485856027460.06  km^3/s^2 = 2.2297247205467538e-15 * km^3/s^2
+    #scale_factor = 1000
+    #dt = 0.01
+
+    ### Constants ###
+
+    G = 2.9592e-04
+    AU = 1.5e11
+    M = 2e30
+    Theta = 1/(2-2**(1/3))
+    Epsilon = 0.1786178958448091
+    Lambda = -0.2123418310626054
+    Chi = -0.6626458266981849E-01
+
+    ### containerVector ###
+    conVec = namedtuple("conVec","x y")
+
+
+
+    # load config json file
+    with open(args.configfile, "r") as configfile:
+        config = json.load(configfile)
+
+    # use configurations from config json file
+    if args.useconfig:
+        try:
+            dt = config[1]["dt"]
+        except:
+            dt = args.dt
+        try:
+            scale_factor = config[1]["scale_factor"]
+        except:
+            scale_factor = args.scale
+        try:
+            end_time = config[1]["time"]
+        except:
+            end_time = args.time
+        try:
+            integrator = config[1]["integrator"]
+        except:
+            integrator = args.integrator
+    # use argument configurations
     else:
-        info_label.text = ''
+        dt = args.dt
+        scale_factor = args.scale
+        end_time = args.time
+        integrator = args.integrator
+
+    # check which integrator was chosen
+    if integrator.lower() == "euler":
+        integrator = Euler
+    elif integrator.lower() == "rk4":
+        integrator = Runge_Kutta
+    elif integrator.lower() == "verlet":
+        integrator = Verlet
+    elif integrator.lower() == "fr":
+        integrator = Forest_Ruth
+    elif integrator.lower() == "pefrl":
+        integrator = PEFRL
 
 
-scene.bind('click', onClick)
-### ###
+    current_time = 0
 
-# loop over every body and run its update method every timestep
-start_time = time.time()
-if end_time > 0:
-    for epoch in range(int(end_time/dt)):
-        rate(args.rate)
+    # list of all the bodies in the simulation
+    bodies = []
 
-        integrator()
+    for body in config[0]:
+        try:
+            GM = body["gm"]
+        except:
+            GM = body["mass"] * G
+        bodies.append(Body(
+            name = body["name"],
+            mass = body["mass"],
+            GM = GM,
+            radius = body["radius"],
+            position = vector(body["position"][0], body["position"][1], body["position"][2]),
+            velocity = vector(body["velocity"][0], body["velocity"][1], body["velocity"][2]),
+            trail = body["trail"],
+            color = color_to_vector(body["color"]),
+            scale = body["scale"],
+            index=len(bodies)
+        ))
 
-        current_time = epoch*dt
-        time_label.text = "Time: {:.2f} years".format(current_time/365)
-    # print body positions for benchmarking
-    if args.printEndPos:
-        for body in bodies:
-            print(f"{body.name}: {body.position}")
-    if args.checkEndPos:
-        error_sum = 0
-        for body in bodies:
-            end_pos = config[0][body.index]["end_position"]
-            end_pos = vector(end_pos[0], end_pos[1], end_pos[2])
-            error = mag(body.position - end_pos) # the magnitude of the error
-            error_sum += error
-            print(f"{body.name}: {error} AU")
-        print(f"Total error: {error_sum}")
-        print(f"dt: {dt}")
-        print(f"Integrator: {args.integrator}")
 
-        
 
-else:
-    while True:
-        rate(args.rate)
-        
-        integrator()
-        
-        time_label.text = "Time: {:.2f} years".format(current_time/365)
-        current_time += dt
 
-print(f"Execution time: {time.time()-start_time} seconds")
+
+    time_label = label(pos=vector(20, 350, 0), pixel_pos=True, align='left', text="Time: " + str(current_time/365) + " years")
+
+    ### info box ###
+    info_label = label(pos=vector(20, scene.height/3, 0), pixel_pos=True, box=False, align='left', text="")
+    scene.bind('click', onClick)
+    ### ###
+
+    # loop over every body and run its update method every timestep
+    start_time = time.time()
+    if end_time > 0:
+        for epoch in range(int(end_time/dt)):
+            rate(args.rate)
+
+            integrator()
+
+            current_time = epoch*dt
+            time_label.text = "Time: {:.2f} years".format(current_time/365)
+        # print body positions for benchmarking
+        if args.printEndPos:
+            for body in bodies:
+                print(f"{body.name}: {body.position}")
+        if args.checkEndPos:
+            error_sum = 0
+            for body in bodies:
+                end_pos = config[0][body.index]["end_position"]
+                end_pos = vector(end_pos[0], end_pos[1], end_pos[2])
+                error = mag(body.position - end_pos) # the magnitude of the error
+                error_sum += error
+                print(f"{body.name}: {error} AU")
+            print(f"Total error: {error_sum}")
+            print(f"dt: {dt}")
+            print(f"Integrator: {args.integrator}")
+
+            
+
+    else:
+        while True:
+            rate(args.rate)
+            
+            integrator()
+            
+            time_label.text = "Time: {:.2f} years".format(current_time/365)
+            current_time += dt
+
+    print(f"Execution time: {time.time()-start_time} seconds")
+
+if __name__ == "__main__":
+    run()
