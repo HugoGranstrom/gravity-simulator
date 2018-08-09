@@ -31,6 +31,7 @@ parser.add_argument("--checkEndPos", action="store_true", default=False, dest="c
 # Time: days
 # G = 4pi^2*AU^3/(M * 365.25) => G = 4*pi^2/365.25^2
 #G = 6.67e-11
+# AU^3/D^2 = 1/448485856027460.06  km^3/s^2 = 2.2297247205467538e-15 * km^3/s^2
 #scale_factor = 1000
 #dt = 0.01
 
@@ -263,8 +264,9 @@ elif integrator.lower() == "pefrl":
 bodies = []
 
 class Body():
-    def __init__(self, mass=1, radius=1, velocity=vector(0,0,0), position=vector(0,0,0), color=color.white, trail=True, name="Body", scale=True, index=0):
+    def __init__(self, mass=1, GM=1, radius=1, velocity=vector(0,0,0), position=vector(0,0,0), color=color.white, trail=True, name="Body", scale=True, index=0):
         self.mass = mass
+        self.GM = GM
         self.velocity = velocity
         self.position = position
         self.temp_position = vector(0,0,0)
@@ -289,9 +291,14 @@ def color_to_vector(color_list):
 
 
 for body in config[0]:
+    try:
+        GM = body["gm"]
+    else:
+        GM = body["mass"] * G
     bodies.append(Body(
         name = body["name"],
         mass = body["mass"],
+        GM = GM,
         radius = body["radius"],
         position = vector(body["position"][0], body["position"][1], body["position"][2]),
         velocity = vector(body["velocity"][0], body["velocity"][1], body["velocity"][2]),
