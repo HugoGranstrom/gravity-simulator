@@ -2,6 +2,7 @@ from vpython import *
 import argparse
 import json
 from collections import namedtuple
+import time
 
 
 # argument parsing
@@ -453,7 +454,7 @@ scene.bind('click', onClick)
 ### ###
 
 # loop over every body and run its update method every timestep
-
+start_time = time.time()
 if end_time > 0:
     for epoch in range(int(end_time/dt)):
         rate(args.rate)
@@ -488,3 +489,5 @@ else:
         
         time_label.text = "Time: {:.2f} years".format(current_time/365)
         current_time += dt
+
+print(f"Execution time: {time.time()-start_time} seconds")
