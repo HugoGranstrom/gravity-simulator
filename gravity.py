@@ -309,14 +309,7 @@ for body in config[0]:
         index=len(bodies)
     ))
 
-# create all bodies in the simulation
 
-""" sun = Body(mass=1,
-           radius=7e8 * 5 / scale_factor / AU,
-           color=color.yellow,
-           trail=False,
-           name="Sun",
-           )
 
 
 earth = Body(mass=6e24/M,
