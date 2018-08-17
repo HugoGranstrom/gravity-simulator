@@ -2,25 +2,26 @@ import argparse
 import json
 from collections import namedtuple
 import time
-import numpy as np
-from concurrent import futures
+import cyvector
+
+vector = cyvector.vector
 
 ### Functions ###
 # gravitational acceleration for Euler and Verlet
 def gravitational_acc(position):
-    sum_acc = np.array([0,0,0], dtype=np.float64)
+    sum_acc = vector(0,0,0)
     # calculate the gravitational acceleration from all other bodies
     for body in bodies:
         # distance to the other body
-        r = (position-body.position)
-        r = np.sqrt(np.dot(r,r))
+        r_vec = body.position - position
+        r = r_vec.mag
         # skip if body is itself
         if r < body.radius:
             continue
         # the magnitude of the force
-        acc = body.GM / r**2
+        acc = body.GM / r_vec.mag2
         # the unit vector for the force
-        dir = (body.position - position)/r
+        dir = r_vec.hat
         # the force vector
         acc = acc * dir
         # add force vector to the sum of forces
@@ -29,19 +30,19 @@ def gravitational_acc(position):
 
 # gravitational acceleration for Runge-Kutta
 def gravitational_acc_runge(xv):
-    sum_acc = np.array([0,0,0], dtype=np.float64)
+    sum_acc = vector(0,0,0)
     # calculate the gravitational acceleration from all other bodies
     for body in bodies:
         # distance to the other body
-        r = (xv.x-body.temp_position)
-        r = np.sqrt(np.dot(r,r))
+        r_vec = body.temp_position - xv.x
+        r = r_vec.mag
         # skip if body is itself
         if r < body.radius:
             continue
         # the magnitude of the force
-        acc = body.GM / r**2
+        acc = body.GM / r_vec.mag2
         # the unit vector for the force
-        dir = (body.temp_position - xv.x)/r
+        dir = r_vec.hat
         # the force vector
         acc = acc * dir
         # add force vector to the sum of forces
@@ -164,12 +165,12 @@ def PEFRL():
 
 
 class Body():
-    def __init__(self, mass=1, GM=1, radius=1, velocity=np.array([0,0,0], dtype=np.float64), position=np.array([0,0,0], dtype=np.float64), name="Body", index=0):
+    def __init__(self, mass=1, GM=1, radius=1, velocity=vector(0,0,0), position=vector(0,0,0), name="Body", index=0):
         self.mass = mass
         self.GM = GM
         self.velocity = velocity
         self.position = position
-        self.temp_position = np.array([0,0,0])
+        self.temp_position = vector(0,0,0)
         self.k = []
         self.xv = conVec(0,0)
         self.radius = radius
@@ -296,8 +297,8 @@ def run():
             mass = body["mass"],
             GM = GM,
             radius = body["radius"],
-            position = np.array(body["position"], dtype=np.float64),
-            velocity = np.array(body["velocity"], dtype=np.float64),
+            position = vector(body["position"][0], body["position"][1], body["position"][2]),
+            velocity = vector(body["velocity"][0], body["velocity"][1], body["velocity"][2]),
             index=len(bodies)
         ))
 
@@ -315,9 +316,8 @@ def run():
             error_sum = 0
             for body in bodies:
                 end_pos = config[0][body.index]["end_position"]
-                end_pos = np.array(end_pos, dtype=np.float64)
-                error = (body.position - end_pos) # the magnitude of the error
-                error = np.sqrt(np.dot(error, error))
+                end_pos = vector(end_pos[0], end_pos[1], end_pos[2])
+                error = (body.position - end_pos).mag # the magnitude of the error
                 error_sum += error
                 print(f"{body.name}: {error} AU")
             print(f"Total error: {error_sum}")
