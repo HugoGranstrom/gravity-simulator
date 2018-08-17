@@ -11,14 +11,15 @@ def gravitational_acc(position):
     # calculate the gravitational acceleration from all other bodies
     for body in bodies:
         # distance to the other body
-        r = mag(position-body.position)
+        r_vec = body.position - position
+        r = r_vec.mag
         # skip if body is itself
         if r < body.radius:
             continue
         # the magnitude of the force
         acc = body.GM / r**2
         # the unit vector for the force
-        dir = norm(body.position - position)
+        dir = r_vec.hat
         # the force vector
         acc = acc * dir
         # add force vector to the sum of forces
@@ -31,14 +32,15 @@ def gravitational_acc_runge(xv):
     # calculate the gravitational acceleration from all other bodies
     for body in bodies:
         # distance to the other body
-        r = mag(xv.x-body.temp_position)
+        r_vec = body.temp_position - xv.x
+        r = r_vec.mag
         # skip if body is itself
         if r < body.radius:
             continue
         # the magnitude of the force
         acc = body.GM / r**2
         # the unit vector for the force
-        dir = norm(body.temp_position - xv.x)
+        dir = r_vec.hat
         # the force vector
         acc = acc * dir
         # add force vector to the sum of forces
