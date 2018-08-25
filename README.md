@@ -104,8 +104,9 @@ This will test how accurate the simulation is when it simulates one year (365 da
 dt is the timestep measured in days and the numbers under the integrators are the total summed error between the simulated positions of the planets at the end of the simulation and the actual position gathered from [Horizons](https://ssd.jpl.nasa.gov/horizons.cgi#top).
 
 # TODO
-- Make documentation
-- Benchmark: compare execution time and accuracy 
+- Finish documentation
+- Benchmark: compare execution time
+- Add option to save positions and velocities to csv every n:th timestep
 
 ## Contribution
 Feel free to submit pull request for improvements or additions. It makes it easier if you open an Issue first so we can discuss a good implementation of your feature.
