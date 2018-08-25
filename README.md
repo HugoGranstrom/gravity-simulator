@@ -84,6 +84,24 @@ If you want to share your simulation with someone else to let them run it on the
 TODO
 
 ## Benchmark
+The benchmark was done with this command (change {dt} and {integrator} with all the combinations you want to test):
+
+``python headless.py -t 365 --configfile 22-07-2018-365-days.json --checkEndPos --dt {dt} --integrator {integrator}``
+
+This will test how accurate the simulation is when it simulates one year (365 days). The data in the json file is from [Horizons](https://ssd.jpl.nasa.gov/horizons.cgi#top). 
+
+### Results
+|dt   | Euler  | Verlet | RK4     | FR     | PEFRL  |
+|-----|-------:|-------:|--------:|-------:|-------:|
+|10   |1.483818|1.521156|42.248875|1.153413|0.549528|
+|5    |0.797699|0.414852|12.610780|0.133126|0.013813|
+|2    |0.243673|0.166049|6.488631 |0.097902|0.093413|
+|1    |0.095696|0.026149|3.461871 |0.009192|0.008896|
+|0,1  |0.016178|0.009059|0.347950 |0.008889|0.008889|
+|0,01 |0.009603|0.008890|0.037238 |0.008889|0.008889|
+|0,001|0.008959|0.008889|0.010172 |0.008889|0.008889|
+
+dt is the timestep measured in days and the numbers under the integrators are the total summed error between the simulated positions of the planets at the end of the simulation and the actual position gathered from [Horizons](https://ssd.jpl.nasa.gov/horizons.cgi#top).
 
 # TODO
 - Make documentation
