@@ -1,8 +1,10 @@
-from vpython import *
 import argparse
 import json
 from collections import namedtuple
 import time
+import cyvector
+
+vector = cyvector.vector
 
 ### Functions ###
 # gravitational acceleration for Euler and Verlet
@@ -17,7 +19,7 @@ def gravitational_acc(position):
         if r < body.radius:
             continue
         # the magnitude of the force
-        acc = body.GM / r**2
+        acc = body.GM / r_vec.mag2
         # the unit vector for the force
         dir = r_vec.hat
         # the force vector
@@ -38,7 +40,7 @@ def gravitational_acc_runge(xv):
         if r < body.radius:
             continue
         # the magnitude of the force
-        acc = body.GM / r**2
+        acc = body.GM / r_vec.mag2
         # the unit vector for the force
         dir = r_vec.hat
         # the force vector
@@ -59,10 +61,6 @@ def Euler():
     # position calculations
     for body in bodies:
         body.position += dt * body.velocity
-        
-        # update position of graphics
-        body.sphere.pos = body.position
-        body.label.pos = body.position
 
 # Runge-Kutta 4 (RK4) Integrator
 def Runge_Kutta():
@@ -114,16 +112,11 @@ def Runge_Kutta():
         body.position += 1/6 * (body.k[1].x + 2*body.k[2].x + 2*body.k[3].x + body.k[4].x)
         body.velocity += 1/6 * (body.k[1].y + 2*body.k[2].y + 2*body.k[3].y + body.k[4].y)
 
-        body.sphere.pos = body.position
-        body.label.pos = body.position
-
 # Velocity-Verlet Integrator
 def Verlet():
     # position calculations
     for body in bodies:
         body.position += body.velocity * dt + body.acc/2 * dt**2
-        body.sphere.pos = body.position
-        body.label.pos = body.position
     # acceleration and velocity calculations
     for body in bodies:
         temp_acc = gravitational_acc(body.position)
@@ -145,8 +138,6 @@ def Forest_Ruth():
         body.velocity += Theta*dt*gravitational_acc(body.position)
     for body in bodies:
         body.position += Theta*dt/2*body.velocity
-        body.sphere.pos = body.position
-        body.label.pos = body.position
 
 
 def PEFRL():
@@ -168,15 +159,13 @@ def PEFRL():
         body.velocity += (1-2*Lambda)*dt/2*gravitational_acc(body.position)
     for body in bodies:
         body.position += Epsilon*dt*body.velocity
-        body.sphere.pos = body.position
-        body.label.pos = body.position
 
 ### End Integrators ###
 
 
 
 class Body():
-    def __init__(self, mass=1, GM=1, radius=1, velocity=vector(0,0,0), position=vector(0,0,0), color=color.white, trail=True, name="Body", scale=True, index=0):
+    def __init__(self, mass=1, GM=1, radius=1, velocity=vector(0,0,0), position=vector(0,0,0), name="Body", index=0):
         self.mass = mass
         self.GM = GM
         self.velocity = velocity
@@ -184,32 +173,11 @@ class Body():
         self.temp_position = vector(0,0,0)
         self.k = []
         self.xv = conVec(0,0)
-        self.sum_forces = vector(0,0,0)
-        self.color = color
         self.radius = radius
         self.acc = gravitational_acc(self.position) # approximate the initial acceleration for Verlet
         self.name = name
-        self.label = label(pos=self.position, text=self.name, height=10)
         self.index = index
-        if scale:
-            self.sphere = sphere(pos=self.position, color=self.color, radius=self.radius*scale_factor, make_trail=trail, retain=200, index=self.index)
-        else:
-            self.sphere = sphere(pos=self.position, color=self.color, radius=self.radius, make_trail=trail, retain=200, index=self.index)
         #bodies.append(self) # uncomment if you want automatic adding to bodies list
-
-
-def color_to_vector(color_list):
-    return vector(color_list[0]/255, color_list[1]/255, color_list[2]/255)
-
-def onClick(e):
-        obj = scene.mouse.pick  # get the sphere
-        if(obj != None):
-            body = bodies[obj.index]  # each sphere has a index attribute wich points to the planets position in the bodies list
-            # info about the planets can noe be retrieved from the class
-            info_label.text = '<b><i>'+body.name+'</i></b>\n<i>Mass:</i> '+str(body.mass)+' M☉\n'
-            # TODO add more info about planets & convert units
-        else:
-            info_label.text = ''
 
 def run():
     # define globals
@@ -223,11 +191,9 @@ def run():
     global Chi
     global conVec
     global dt
-    global scale_factor
     global end_time
     global integrator
     global bodies
-    global info_label
 
     # argument parsing
     parser = argparse.ArgumentParser(description="A newtonian gravity simulator")
@@ -290,10 +256,6 @@ def run():
         except:
             dt = args.dt
         try:
-            scale_factor = config[1]["scale_factor"]
-        except:
-            scale_factor = args.scale
-        try:
             end_time = config[1]["time"]
         except:
             end_time = args.time
@@ -304,7 +266,6 @@ def run():
     # use argument configurations
     else:
         dt = args.dt
-        scale_factor = args.scale
         end_time = args.time
         integrator = args.integrator
 
@@ -338,33 +299,15 @@ def run():
             radius = body["radius"],
             position = vector(body["position"][0], body["position"][1], body["position"][2]),
             velocity = vector(body["velocity"][0], body["velocity"][1], body["velocity"][2]),
-            trail = body["trail"],
-            color = color_to_vector(body["color"]),
-            scale = body["scale"],
             index=len(bodies)
         ))
-
-
-
-
-
-    time_label = label(pos=vector(20, 350, 0), pixel_pos=True, align='left', text="Time: " + str(current_time/365) + " years")
-
-    ### info box ###
-    info_label = label(pos=vector(20, scene.height/3, 0), pixel_pos=True, box=False, align='left', text="")
-    scene.bind('click', onClick)
-    ### ###
 
     # loop over every body and run its update method every timestep
     start_time = time.time()
     if end_time > 0:
         for epoch in range(int(end_time/dt)):
-            rate(args.rate)
-
             integrator()
-
             current_time = epoch*dt
-            time_label.text = "Time: {:.2f} years".format(current_time/365)
         # print body positions for benchmarking
         if args.printEndPos:
             for body in bodies:
@@ -374,7 +317,7 @@ def run():
             for body in bodies:
                 end_pos = config[0][body.index]["end_position"]
                 end_pos = vector(end_pos[0], end_pos[1], end_pos[2])
-                error = mag(body.position - end_pos) # the magnitude of the error
+                error = (body.position - end_pos).mag # the magnitude of the error
                 error_sum += error
                 print(f"{body.name}: {error} AU")
             print(f"Total error: {error_sum}")
@@ -385,11 +328,7 @@ def run():
 
     else:
         while True:
-            rate(args.rate)
-            
             integrator()
-            
-            time_label.text = "Time: {:.2f} years".format(current_time/365)
             current_time += dt
 
     print(f"Execution time: {time.time()-start_time} seconds")
