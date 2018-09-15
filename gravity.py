@@ -206,7 +206,7 @@ def onClick(e):
         if(obj != None):
             body = bodies[obj.index]  # each sphere has a index attribute wich points to the planets position in the bodies list
             # info about the planets can noe be retrieved from the class
-            info_label.text = '<b><i>'+body.name+'</i></b>\n<i>Mass:</i> '+str(body.mass)+' M☉\n'
+            info_label.text = '<b><i>'+body.name+'</i></b>\n<i>Mass:</i> '+str(body.mass)+' M☉\n' + '<i>Position:</i> '+str(body.position)+'\n'
             # TODO add more info about planets & convert units
         else:
             info_label.text = ''
