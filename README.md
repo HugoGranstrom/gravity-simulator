@@ -10,6 +10,8 @@ To run the default configuration (dt=0.01, integrator=euler, infinite loop, the 
 
 You can also run the simulation in a headless mode ie. no gui. To use headless mode you run ``python gravity.py``. It has the same arguments as ``gravity.py``. In my benchmarking it was around 20-30% faster than the gui version. 
 
+(Headless version may not be working on Linux and Mac at the moment)
+
 ## Options
 There are multiple command line arguments you can pass to the simulation:
 - `-t` or `--time`, the length of the simulation measured in days. If it is set to ``0`` it will go on forever. Default: 0.
