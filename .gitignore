@@ -102,3 +102,5 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+benchmarks/integrators.xlsx
+benchmarks/~$integrators.xlsx
