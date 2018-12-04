@@ -10,8 +10,6 @@ To run the default configuration (dt=0.01, integrator=euler, infinite loop, the 
 
 You can also run the simulation in a headless mode ie. no gui. To use headless mode you run ``python gravity.py``. It has the same arguments as ``gravity.py``. In my benchmarking it was around 20-30% faster than the gui version. 
 
-(Headless version may not be working on Linux and Mac at the moment)
-
 ## Options
 There are multiple command line arguments you can pass to the simulation:
 - `-t` or `--time`, the length of the simulation measured in days. If it is set to ``0`` it will go on forever. Default: 0.
@@ -104,6 +102,10 @@ This will test how accurate the simulation is when it simulates one year (365 da
 | 0,01         | 0,00074768069 | 0,00000228638 | 0,03439155278  | 0,00000175423 | 0,00000175423 |
 
 dt is the timestep measured in days and the numbers under the integrators are the total summed error between the simulated positions of the planets at the end of the simulation and the actual position gathered from [Horizons](https://ssd.jpl.nasa.gov/horizons.cgi#top).
+
+# Compability
+- Windows 64-bit: Working :-)
+- Linux/Mac: hopefully working (file an issue whether it works or not)
 
 # TODO
 - Finish documentation
