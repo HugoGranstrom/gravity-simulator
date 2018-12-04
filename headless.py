@@ -3,6 +3,7 @@ import json
 from collections import namedtuple
 import time
 import cyvector
+from math import pi
 
 vector = cyvector.vector
 
@@ -54,19 +55,19 @@ def gravitational_acc_runge(xv):
 # Euler Integrator
 def Euler():
     # acceleration and velocity calculations
-    for body in bodies:
+    for body in all_bodies:
         body.acc = gravitational_acc(body.position)
         body.velocity += dt * body.acc
 
     # position calculations
-    for body in bodies:
+    for body in all_bodies:
         body.position += dt * body.velocity
 
 # Runge-Kutta 4 (RK4) Integrator
 def Runge_Kutta():
     
     # calculate k1
-    for body in bodies:
+    for body in all_bodies:
         body.k = [0] # zero at beginning to push indices one step up for readability
         body.temp_position = body.position
         body.xv = conVec(body.temp_position, body.velocity)
@@ -75,89 +76,89 @@ def Runge_Kutta():
         body.k.append(k1)
         
     # move temp_pos according to k1
-    for body in bodies:
+    for body in all_bodies:
         body.temp_position = body.position + body.k[1].x/2
     
     # calculate k2
-    for body in bodies:
+    for body in all_bodies:
         temp_xv = conVec(body.xv.x + body.k[1].x/2, body.xv.y + body.k[1].y/2)
         temp_k2 = gravitational_acc_runge(temp_xv)
         k2 = conVec(temp_k2.x * dt, temp_k2.y * dt)
         body.k.append(k2)
     
     # move temp_pos according to k2
-    for body in bodies:
+    for body in all_bodies:
         body.temp_position = body.position + body.k[2].x/2
 
     # calculate k3
-    for body in bodies:
+    for body in all_bodies:
         temp_xv = conVec(body.xv.x + body.k[2].x/2, body.xv.y + body.k[2].y/2)
         temp_k3 = gravitational_acc_runge(temp_xv)
         k3 = conVec(temp_k3.x * dt, temp_k3.y * dt)
         body.k.append(k3)
     
     # move temp_pos according to k3
-    for body in bodies:
+    for body in all_bodies:
         body.temp_position = body.position + body.k[3].x
 
     # calculate k4
-    for body in bodies:
+    for body in all_bodies:
         temp_xv = conVec(body.xv.x + body.k[3].x, body.xv.y + body.k[3].y)
         temp_k4 = gravitational_acc_runge(temp_xv)
         k4 = conVec(temp_k4.x * dt, temp_k4.y * dt)
         body.k.append(k4)
 
     # calculate weighted sum and move bodies
-    for body in bodies:
+    for body in all_bodies:
         body.position += 1/6 * (body.k[1].x + 2*body.k[2].x + 2*body.k[3].x + body.k[4].x)
         body.velocity += 1/6 * (body.k[1].y + 2*body.k[2].y + 2*body.k[3].y + body.k[4].y)
 
 # Velocity-Verlet Integrator
 def Verlet():
     # position calculations
-    for body in bodies:
+    for body in all_bodies:
         body.position += body.velocity * dt + body.acc/2 * dt**2
     # acceleration and velocity calculations
-    for body in bodies:
+    for body in all_bodies:
         temp_acc = gravitational_acc(body.position)
         body.velocity += dt/2*(body.acc + temp_acc)
         body.acc = temp_acc
 
 def Forest_Ruth():
-    for body in bodies:
+    for body in all_bodies:
         body.position += Theta*dt/2*body.velocity
-    for body in bodies:
+    for body in all_bodies:
         body.velocity += Theta*dt*gravitational_acc(body.position)
-    for body in bodies:
+    for body in all_bodies:
         body.position += (1-Theta)*dt/2*body.velocity
-    for body in bodies:
+    for body in all_bodies:
         body.velocity += (1-2*Theta)*dt*gravitational_acc(body.position)
-    for body in bodies:
+    for body in all_bodies:
         body.position += (1-Theta)*dt/2*body.velocity
-    for body in bodies:
+    for body in all_bodies:
         body.velocity += Theta*dt*gravitational_acc(body.position)
-    for body in bodies:
+    for body in all_bodies:
         body.position += Theta*dt/2*body.velocity
 
 
 def PEFRL():
-    for body in bodies:
+    for body in all_bodies:
         body.position += Epsilon*dt*body.velocity
-    for body in bodies:
+    for body in all_bodies:
         body.velocity += (1-2*Lambda)*dt/2*gravitational_acc(body.position)
-    for body in bodies:
+    for body in all_bodies:
         body.position += Chi*dt*body.velocity
-    for body in bodies:
+    for body in all_bodies:
         body.velocity += Lambda*dt*gravitational_acc(body.position)
-    for body in bodies:
+    for body in all_bodies:
         body.position += (1-2*(Chi+Epsilon))*dt*body.velocity
-    for body in bodies:
+    for body in all_bodies:
         body.velocity += Lambda*dt*gravitational_acc(body.position)
-    for body in bodies:
+    for body in all_bodies:
         body.position += Chi*dt*body.velocity
-    for body in bodies:
+    for body in all_bodies:
         body.velocity += (1-2*Lambda)*dt/2*gravitational_acc(body.position)
-    for body in bodies:
+    for body in all_bodies:
         body.position += Epsilon*dt*body.velocity
 
 ### End Integrators ###
@@ -194,6 +195,8 @@ def run():
     global end_time
     global integrator
     global bodies
+    global comets
+    global all_bodies
 
     # argument parsing
     parser = argparse.ArgumentParser(description="A newtonian gravity simulator")
@@ -232,7 +235,8 @@ def run():
 
     ### Constants ###
 
-    G = 2.9592e-04
+    #G = 2.9592e-04
+    G = 4*pi**2/365.25**2
     AU = 1.5e11
     M = 2e30
     Theta = 1/(2-2**(1/3))
@@ -286,21 +290,36 @@ def run():
 
     # list of all the bodies in the simulation
     bodies = []
+    comets = []
+    all_bodies = []
 
     for body in config[0]:
         try:
             GM = body["gm"]
         except:
             GM = body["mass"] * G
-        bodies.append(Body(
-            name = body["name"],
-            mass = body["mass"],
-            GM = GM,
-            radius = body["radius"],
-            position = vector(body["position"][0], body["position"][1], body["position"][2]),
-            velocity = vector(body["velocity"][0], body["velocity"][1], body["velocity"][2]),
-            index=len(bodies)
-        ))
+        if not body["comet"]:
+            bodies.append(Body(
+                name = body["name"],
+                mass = body["mass"],
+                GM = GM,
+                radius = body["radius"],
+                position = vector(body["position"][0], body["position"][1], body["position"][2]),
+                velocity = vector(body["velocity"][0], body["velocity"][1], body["velocity"][2]),
+                index=len(bodies)
+            ))
+        else:
+            comets.append(Body(
+                name = body["name"],
+                mass = body["mass"],
+                GM = GM,
+                radius = body["radius"],
+                position = vector(body["position"][0], body["position"][1], body["position"][2]),
+                velocity = vector(body["velocity"][0], body["velocity"][1], body["velocity"][2]),
+                index=len(bodies)
+            ))
+
+    all_bodies = bodies + comets
 
     # loop over every body and run its update method every timestep
     start_time = time.time()
