@@ -91,15 +91,15 @@ The benchmark was done with this command (change {dt} and {integrator} with all 
 This will test how accurate the simulation is when it simulates one year (365 days). The data in the json file is from [Horizons](https://ssd.jpl.nasa.gov/horizons.cgi#top). 
 
 ### Results
-|dt   | Euler  | Verlet | RK4     | FR     | PEFRL  |
-|-----|-------:|-------:|--------:|-------:|-------:|
-|10   |1.483818|1.521156|42.248875|1.153413|0.549528|
-|5    |0.797699|0.414852|12.610780|0.133126|0.013813|
-|2    |0.243673|0.166049|6.488631 |0.097902|0.093413|
-|1    |0.095696|0.026149|3.461871 |0.009192|0.008896|
-|0,1  |0.016178|0.009059|0.347950 |0.008889|0.008889|
-|0,01 |0.009603|0.008890|0.037238 |0.008889|0.008889|
-|0,001|0.008959|0.008889|0.010172 |0.008889|0.008889|
+| T = 365 Days | integrator    |               |                |               |               |
+|--------------|---------------|---------------|----------------|---------------|---------------|
+| dt           | euler         | verlet        | rk4            | fr            | pefrl         |
+| 10           | 1,47476219077 | 1,51285184129 | 39,14386323373 | 1,14509990477 | 0,54122193722 |
+| 5            | 0,79499239136 | 0,41222294662 | 12,60597127155 | 0,12479212873 | 0,00493978032 |
+| 2            | 0,24397024003 | 0,16658838425 | 6,48772249431  | 0,09844171931 | 0,09395267074 |
+| 1            | 0,09101448696 | 0,01847137514 | 3,45951631113  | 0,00030737638 | 0,00000883167 |
+| 0,1          | 0,00755360321 | 0,00018533487 | 0,34543910869  | 0,00000172775 | 0,00000175356 |
+| 0,01         | 0,00074768069 | 0,00000228638 | 0,03439155278  | 0,00000175423 | 0,00000175423 |
 
 dt is the timestep measured in days and the numbers under the integrators are the total summed error between the simulated positions of the planets at the end of the simulation and the actual position gathered from [Horizons](https://ssd.jpl.nasa.gov/horizons.cgi#top).
 
