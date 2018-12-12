@@ -2,13 +2,13 @@
 A newtonian brute force gravity simulator of the solar system written in Python/Vpython. It is probably not too accurate so don't plan your rocket launch using it. It can be fun though to play around making your own solar systems (or throwing in a black hole in our own).
 
 # Usage
-To run the default configuration (dt=0.01, integrator=euler, infinite loop, the sun and 9 planets) run ``python gravity.py`` to run the simulation. It will open up a browser window and it will show the simulation there. To stop the simulation you close the browser tab, CTRL-C does not work. You can navigate the scene with these controls:
+To run the default configuration (dt=0.01, integrator=euler, infinite loop, the sun and 9 planets + some surprises) run ``python gravity.py`` to run the simulation. It will open up a browser window and it will show the simulation there. To stop the simulation you close the browser tab, CTRL-C does not work. You can navigate the scene with these controls:
 - Zoom: scroll while your mouse pointer is above the simulation window.
 - Pan: SHIFT + LEFT MOUSE BUTTON.
 - Rotate: hold RIGHT MOUSE BUTTON
 - Resize window: drag in the lower left corner of the simulation. 
 
-You can also run the simulation in a headless mode ie. no gui. To use headless mode you run ``python gravity.py``. It has the same arguments as ``gravity.py``. In my benchmarking it was around 20-30% faster than the gui version. 
+You can also run the simulation in a headless mode ie. no gui. To use headless mode you run ``python headless.py``. It has the same arguments as ``gravity.py``. In my benchmarking it was around 20-30% faster than the gui version. 
 
 ## Options
 There are multiple command line arguments you can pass to the simulation:
@@ -94,6 +94,8 @@ The benchmark was done with this command (change {dt} and {integrator} with all 
 ``python headless.py -t 365 --configfile 22-07-2018-365-days.json --checkEndPos --dt {dt} --integrator {integrator}``
 
 This will test how accurate the simulation is when it simulates one year (365 days). The data in the json file is from [Horizons](https://ssd.jpl.nasa.gov/horizons.cgi#top). 
+
+Note: for this to work you must set the property ``endPos`` for the planets you want to benchmark in your config.json file. 
 
 ### Results
 | T = 365 Days | integrator    |               |                |               |               |
