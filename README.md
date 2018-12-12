@@ -1,6 +1,10 @@
 # Gravity-simulator
 A newtonian brute force gravity simulator of the solar system written in Python/Vpython. It is probably not too accurate so don't plan your rocket launch using it. It can be fun though to play around making your own solar systems (or throwing in a black hole in our own).
 
+# Prerequisites
+You must have VPython installed on your system. To install it, run this command:
+``pip install vpython``
+
 # Usage
 To run the default configuration (dt=0.01, integrator=euler, infinite loop, the sun and 9 planets + some surprises) run ``python gravity.py`` to run the simulation. It will open up a browser window and it will show the simulation there. To stop the simulation you close the browser tab, CTRL-C does not work. You can navigate the scene with these controls:
 - Zoom: scroll while your mouse pointer is above the simulation window.
