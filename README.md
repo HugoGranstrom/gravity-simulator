@@ -79,6 +79,7 @@ Every planet is configured in ``config.json`` by default. The current attributes
 - ``color`` - the color the planet and its trail will have. Given as a array/list of RGB values in the range(0, 255): [red, blue, green].
 - ``trail`` - set to ``true`` if the planet should show a trail after itself. If not set to ``false``.
 - ``scale`` - set to ``true`` if you want to scale the visual radius (the one used in calculations is still the same as ``radius``) of the planet by ``scale_factor`` to make it easier to see. For big planets (eg the sun in a solar system) set it to ``false``.
+- ``comet`` - if set to ``true`` the planet will not affect the other planets with any gravitational force. It itself will be affected by every body that has this property set to ``false``. Setting this to ``true`` is good when the planet is very lightweight compared to the other planets because it will speed up the simulation speed. 
 
 #### Simulation Settings
 If you want to share your simulation with someone else to let them run it on their computers it is handy to set your simulation settings in your ``config.json`` file because then all you have to do is to send them this file and they are ready to go. By default it is turned off, to use it, add ``--useconfig`` to your run-command like this: ``python gravity.py --useconfig``. Settings in your ``config.json`` file will have higher priority than those you pass through the command line. 
