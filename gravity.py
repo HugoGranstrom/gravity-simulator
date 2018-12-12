@@ -349,7 +349,7 @@ def run():
                 trail = body["trail"],
                 color = color_to_vector(body["color"]),
                 scale = body["scale"],
-                index=len(bodies)
+                index=len(bodies) + len(comets)
             ))
         else:
             comets.append(Body(
@@ -362,7 +362,7 @@ def run():
                 trail = body["trail"],
                 color = color_to_vector(body["color"]),
                 scale = body["scale"],
-                index=len(bodies)
+                index=len(bodies) + len(comets)
             ))
 
     all_bodies = bodies + comets
@@ -393,11 +393,14 @@ def run():
         if args.checkEndPos:
             error_sum = 0
             for body in bodies:
-                end_pos = config[0][body.index]["end_position"]
-                end_pos = vector(end_pos[0], end_pos[1], end_pos[2])
-                error = mag(body.position - end_pos) # the magnitude of the error
-                error_sum += error
-                print(f"{body.name}: {error} AU")
+                try:
+                    end_pos = config[0][body.index]["end_position"]
+                    end_pos = vector(end_pos[0], end_pos[1], end_pos[2])
+                    error = mag(body.position - end_pos) # the magnitude of the error
+                    error_sum += error
+                    print(f"{body.name}: {error} AU")
+                except:
+                    print(f"{body.name} has no endPos")
             print(f"Total error: {error_sum}")
             print(f"dt: {dt}")
             print(f"Integrator: {args.integrator}")
