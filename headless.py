@@ -306,7 +306,7 @@ def run():
                 radius = body["radius"],
                 position = vector(body["position"][0], body["position"][1], body["position"][2]),
                 velocity = vector(body["velocity"][0], body["velocity"][1], body["velocity"][2]),
-                index=len(bodies)
+                index=len(bodies) + len(comets)
             ))
         else:
             comets.append(Body(
@@ -316,7 +316,7 @@ def run():
                 radius = body["radius"],
                 position = vector(body["position"][0], body["position"][1], body["position"][2]),
                 velocity = vector(body["velocity"][0], body["velocity"][1], body["velocity"][2]),
-                index=len(bodies)
+                index=len(bodies) + len(comets)
             ))
 
     all_bodies = bodies + comets
@@ -334,11 +334,14 @@ def run():
         if args.checkEndPos:
             error_sum = 0
             for body in bodies:
-                end_pos = config[0][body.index]["end_position"]
-                end_pos = vector(end_pos[0], end_pos[1], end_pos[2])
-                error = (body.position - end_pos).mag # the magnitude of the error
-                error_sum += error
-                print(f"{body.name}: {error} AU")
+                try:
+                    end_pos = config[0][body.index]["end_position"]
+                    end_pos = vector(end_pos[0], end_pos[1], end_pos[2])
+                    error = (body.position - end_pos).mag # the magnitude of the error
+                    error_sum += error
+                    print(f"{body.name}: {error} AU")
+                except:
+                    print(f"{body.name} has no endPos")
             print(f"Total error: {error_sum}")
             print(f"dt: {dt}")
             print(f"Integrator: {args.integrator}")
