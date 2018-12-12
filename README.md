@@ -22,7 +22,7 @@ There are multiple command line arguments you can pass to the simulation:
 - `--rate`, the maximum amount of timesteps per second. Default: 100000.
 - `--configfile`, the path to the json file containing your configurations. Default: ``config.json``.
 - `--useconfig`, if this is checked then the settings in your configuration file will be used over those you pass in the command line. Not checked by default.
-- `--integrator`, the integrator you want to use. Default: ``"euler"``.
+- `--integrator`, the integrator you want to use. Default: ``"euler"``. You're options are: ``"euler"``,``"verlet"``,``"rk4"``,``"fr"``,``"pefrl"``.
 - `--endPos`, prints the end position of all planets if checked. Not checked by default.
 - `--checkEndPos`, when simulation is ended, compare the end positions of all bodies with their ``"end_position"`` in the configuration file and prints both the individual error and the sum. Used for measuring accuracy of integrators. 
 
