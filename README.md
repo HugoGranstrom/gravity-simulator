@@ -123,6 +123,7 @@ dt is the timestep measured in days and the numbers under the integrators are th
 - Benchmark: compare execution time
 - Add option to save positions and velocities to csv every n:th timestep
 - Collisions maybe (at least with the sun to avoid slingshots)
+- Implement Barnes Hut for improved speed
 
 ## Contribution
 Feel free to submit pull request for improvements or additions. It makes it easier if you open an Issue first so we can discuss a good implementation of your feature.
