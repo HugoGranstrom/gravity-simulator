@@ -5,6 +5,7 @@ A newtonian brute force gravity simulator of the solar system written in Python/
 
 # Prerequisites
 You must have VPython installed on your system if you want to run the GUI. To install it, run this command:
+
 ``pip install vpython``
 
 # Usage
