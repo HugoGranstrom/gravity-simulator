@@ -1,4 +1,6 @@
 # Gravity-simulator
+![screenshot](screenshot.png)
+
 A newtonian brute force gravity simulator of the solar system written in Python/Vpython. It is probably not too accurate so don't plan your rocket launch using it. It can be fun though to play around making your own solar systems (or throwing in a black hole in our own).
 
 # Prerequisites
