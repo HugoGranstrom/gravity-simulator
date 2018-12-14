@@ -11,8 +11,8 @@ vector = cyvector.vector
 parser = argparse.ArgumentParser(description="A newtonian gravity simulator")
 parser.add_argument("-t", "--time", type=float, default=0, dest="time",
                     help="The amount of time the simulation will simulate measured in days. Type 0 for infinite time. (Default: 0)")
-parser.add_argument("--dt", type=float, default=0.01, dest="dt",
-                    help="The timestep to use. (Default: 0.01)")
+parser.add_argument("--dt", type=float, default=0.1, dest="dt",
+                    help="The timestep to use. (Default: 0.1)")
 parser.add_argument("--scale", type=float, default=1000, dest="scale",
                     help="The number to scale the radiuses of the planets to make them visible. Does only affect the visuals not collisions. (Default: 1000)")
 parser.add_argument("--rate", type=int, default=100000, dest="rate",
@@ -21,8 +21,8 @@ parser.add_argument("--configfile", type=str, default="config.json", dest="confi
                     help="Path to the config file containing the bodies. (Default: config.json)")
 parser.add_argument("--useconfig", action="store_true", default=False, dest="useconfig",
                     help="Use this flag if you want to use the settings in the configfile instead of defaults and cmd arguments. (Default: False)")
-parser.add_argument("--integrator", type=str, default="euler", dest="integrator", 
-                    help="The integrator to be used. Options: euler, verlet, rk4, fr, pefrl (Default: euler)")
+parser.add_argument("--integrator", type=str, default="verlet", dest="integrator", 
+                    help="The integrator to be used. Options: euler, verlet, rk4, fr, pefrl (Default: verlet)")
 parser.add_argument("--endPos", action="store_true", default=False, dest="printEndPos",
                     help="When flagged the end position of all bodies will be printed (Deafult: False)")
 parser.add_argument("--checkEndPos", action="store_true", default=False, dest="checkEndPos",

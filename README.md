@@ -20,12 +20,12 @@ You can also run the simulation in a headless mode ie. no gui. To use headless m
 ## Options
 There are multiple command line arguments you can pass to the simulation:
 - `-t` or `--time`, the length of the simulation measured in days. If it is set to ``0`` it will go on forever. Default: 0.
-- `--dt`, the timestep the simulation will use measured in days. Default: 0.01.
+- `--dt`, the timestep the simulation will use measured in days. Default: 0.1.
 - `--scale`, to make the simulation look better you can scale all planets with the property `"scale" = true` by a scale factor you specify here. Default: 1000.
 - `--rate`, the maximum amount of timesteps per second. Default: 100000.
 - `--configfile`, the path to the json file containing your configurations. Default: ``config.json``.
 - `--useconfig`, if this is checked then the settings in your configuration file will be used over those you pass in the command line. Not checked by default.
-- `--integrator`, the integrator you want to use. Default: ``"euler"``. You're options are: ``"euler"``,``"verlet"``,``"rk4"``,``"fr"``,``"pefrl"``.
+- `--integrator`, the integrator you want to use. Default: ``"verlet"``. You're options are: ``"euler"``,``"verlet"``,``"rk4"``,``"fr"``,``"pefrl"``.
 - `--endPos`, prints the end position of all planets if checked. Not checked by default.
 - `--checkEndPos`, when simulation is ended, compare the end positions of all bodies with their ``"end_position"`` in the configuration file and prints both the individual error and the sum. Used for measuring accuracy of integrators. 
 
