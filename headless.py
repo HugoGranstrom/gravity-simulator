@@ -7,6 +7,81 @@ from math import pi
 
 vector = cyvector.vector
 
+# argument parsing
+parser = argparse.ArgumentParser(description="A newtonian gravity simulator")
+parser.add_argument("-t", "--time", type=float, default=0, dest="time",
+                    help="The amount of time the simulation will simulate measured in days. Type 0 for infinite time. (Default: 0)")
+parser.add_argument("--dt", type=float, default=0.01, dest="dt",
+                    help="The timestep to use. (Default: 0.01)")
+parser.add_argument("--scale", type=float, default=1000, dest="scale",
+                    help="The number to scale the radiuses of the planets to make them visible. Does only affect the visuals not collisions. (Default: 1000)")
+parser.add_argument("--rate", type=int, default=100000, dest="rate",
+                    help="Number of timesteps per second (Default: 100000)")
+parser.add_argument("--configfile", type=str, default="config.json", dest="configfile",
+                    help="Path to the config file containing the bodies. (Default: config.json)")
+parser.add_argument("--useconfig", action="store_true", default=False, dest="useconfig",
+                    help="Use this flag if you want to use the settings in the configfile instead of defaults and cmd arguments. (Default: False)")
+parser.add_argument("--integrator", type=str, default="euler", dest="integrator", 
+                    help="The integrator to be used. Options: euler, verlet, rk4, fr, pefrl (Default: euler)")
+parser.add_argument("--endPos", action="store_true", default=False, dest="printEndPos",
+                    help="When flagged the end position of all bodies will be printed (Deafult: False)")
+parser.add_argument("--checkEndPos", action="store_true", default=False, dest="checkEndPos",
+                    help="When flagged the end position of all bodies is compared to their real end positions, which are given as 'end_position' in config.json (Default: False)")
+
+# parse cmd arguments
+args = parser.parse_args()
+
+
+# UNITS:
+# Mass: solar mass
+# Length: Astronomical unit
+# Time: days
+# G = 4pi^2*AU^3/(M * 365.25) => G = 4*pi^2/365.25^2
+#G = 6.67e-11
+# AU^3/D^2 = 1/448485856027460.06  km^3/s^2 = 2.2297247205467538e-15 * km^3/s^2
+#scale_factor = 1000
+#dt = 0.01
+
+### Constants ###
+
+#G = 2.9592e-04
+G = 4*pi**2/365.25**2
+AU = 1.5e11
+M = 2e30
+Theta = 1/(2-2**(1/3))
+Epsilon = 0.1786178958448091
+Lambda = -0.2123418310626054
+Chi = -0.6626458266981849E-01
+
+### containerVector ###
+conVec = namedtuple("conVec","x y")
+
+
+
+# load config json file
+with open(args.configfile, "r") as configfile:
+    config = json.load(configfile)
+
+# use configurations from config json file
+if args.useconfig:
+    try:
+        dt = config[1]["dt"]
+    except:
+        dt = args.dt
+    try:
+        end_time = config[1]["time"]
+    except:
+        end_time = args.time
+    try:
+        integrator = config[1]["integrator"]
+    except:
+        integrator = args.integrator
+# use argument configurations
+else:
+    dt = args.dt
+    end_time = args.time
+    integrator = args.integrator
+
 ### Functions ###
 # gravitational acceleration for Euler and Verlet
 def gravitational_acc(position):
@@ -180,180 +255,86 @@ class Body():
         self.index = index
         #bodies.append(self) # uncomment if you want automatic adding to bodies list
 
-def run():
-    # define globals
-    global args
-    global G
-    global AU
-    global M
-    global Theta
-    global Epsilon
-    global Lambda
-    global Chi
-    global conVec
-    global dt
-    global end_time
-    global integrator
-    global bodies
-    global comets
-    global all_bodies
-
-    # argument parsing
-    parser = argparse.ArgumentParser(description="A newtonian gravity simulator")
-    parser.add_argument("-t", "--time", type=float, default=0, dest="time",
-                        help="The amount of time the simulation will simulate measured in days. Type 0 for infinite time. (Default: 0)")
-    parser.add_argument("--dt", type=float, default=0.01, dest="dt",
-                        help="The timestep to use. (Default: 0.01)")
-    parser.add_argument("--scale", type=float, default=1000, dest="scale",
-                        help="The number to scale the radiuses of the planets to make them visible. Does only affect the visuals not collisions. (Default: 1000)")
-    parser.add_argument("--rate", type=int, default=100000, dest="rate",
-                        help="Number of timesteps per second (Default: 100000)")
-    parser.add_argument("--configfile", type=str, default="config.json", dest="configfile",
-                        help="Path to the config file containing the bodies. (Default: config.json)")
-    parser.add_argument("--useconfig", action="store_true", default=False, dest="useconfig",
-                        help="Use this flag if you want to use the settings in the configfile instead of defaults and cmd arguments. (Default: False)")
-    parser.add_argument("--integrator", type=str, default="euler", dest="integrator", 
-                        help="The integrator to be used. Options: euler, verlet, rk4, fr, pefrl (Default: euler)")
-    parser.add_argument("--endPos", action="store_true", default=False, dest="printEndPos",
-                        help="When flagged the end position of all bodies will be printed (Deafult: False)")
-    parser.add_argument("--checkEndPos", action="store_true", default=False, dest="checkEndPos",
-                        help="When flagged the end position of all bodies is compared to their real end positions, which are given as 'end_position' in config.json (Default: False)")
-
-    # parse cmd arguments
-    args = parser.parse_args()
 
 
-    # UNITS:
-    # Mass: solar mass
-    # Length: Astronomical unit
-    # Time: days
-    # G = 4pi^2*AU^3/(M * 365.25) => G = 4*pi^2/365.25^2
-    #G = 6.67e-11
-    # AU^3/D^2 = 1/448485856027460.06  km^3/s^2 = 2.2297247205467538e-15 * km^3/s^2
-    #scale_factor = 1000
-    #dt = 0.01
-
-    ### Constants ###
-
-    #G = 2.9592e-04
-    G = 4*pi**2/365.25**2
-    AU = 1.5e11
-    M = 2e30
-    Theta = 1/(2-2**(1/3))
-    Epsilon = 0.1786178958448091
-    Lambda = -0.2123418310626054
-    Chi = -0.6626458266981849E-01
-
-    ### containerVector ###
-    conVec = namedtuple("conVec","x y")
+# check which integrator was chosen
+if integrator.lower() == "euler":
+    integrator = Euler
+elif integrator.lower() == "rk4":
+    integrator = Runge_Kutta
+elif integrator.lower() == "verlet":
+    integrator = Verlet
+elif integrator.lower() == "fr":
+    integrator = Forest_Ruth
+elif integrator.lower() == "pefrl":
+    integrator = PEFRL
 
 
+current_time = 0
 
-    # load config json file
-    with open(args.configfile, "r") as configfile:
-        config = json.load(configfile)
+# list of all the bodies in the simulation
+bodies = []
+comets = []
+all_bodies = []
 
-    # use configurations from config json file
-    if args.useconfig:
-        try:
-            dt = config[1]["dt"]
-        except:
-            dt = args.dt
-        try:
-            end_time = config[1]["time"]
-        except:
-            end_time = args.time
-        try:
-            integrator = config[1]["integrator"]
-        except:
-            integrator = args.integrator
-    # use argument configurations
+for body in config[0]:
+    try:
+        GM = body["gm"]
+    except:
+        GM = body["mass"] * G
+    if not body["comet"]:
+        bodies.append(Body(
+            name = body["name"],
+            mass = body["mass"],
+            GM = GM,
+            radius = body["radius"],
+            position = vector(body["position"][0], body["position"][1], body["position"][2]),
+            velocity = vector(body["velocity"][0], body["velocity"][1], body["velocity"][2]),
+            index=len(bodies) + len(comets)
+        ))
     else:
-        dt = args.dt
-        end_time = args.time
-        integrator = args.integrator
+        comets.append(Body(
+            name = body["name"],
+            mass = body["mass"],
+            GM = GM,
+            radius = body["radius"],
+            position = vector(body["position"][0], body["position"][1], body["position"][2]),
+            velocity = vector(body["velocity"][0], body["velocity"][1], body["velocity"][2]),
+            index=len(bodies) + len(comets)
+        ))
 
-    # check which integrator was chosen
-    if integrator.lower() == "euler":
-        integrator = Euler
-    elif integrator.lower() == "rk4":
-        integrator = Runge_Kutta
-    elif integrator.lower() == "verlet":
-        integrator = Verlet
-    elif integrator.lower() == "fr":
-        integrator = Forest_Ruth
-    elif integrator.lower() == "pefrl":
-        integrator = PEFRL
+all_bodies = bodies + comets
 
+# loop over every body and run its update method every timestep
+start_time = time.time()
+if end_time > 0:
+    for epoch in range(int(end_time/dt)):
+        integrator()
+        current_time = epoch*dt
+    # print body positions for benchmarking
+    if args.printEndPos:
+        for body in bodies:
+            print(f"{body.name}: {body.position}")
+    if args.checkEndPos:
+        error_sum = 0
+        for body in bodies:
+            try:
+                end_pos = config[0][body.index]["end_position"]
+                end_pos = vector(end_pos[0], end_pos[1], end_pos[2])
+                error = (body.position - end_pos).mag # the magnitude of the error
+                error_sum += error
+                print(f"{body.name}: {error} AU")
+            except:
+                print(f"{body.name} has no endPos")
+        print(f"Total error: {error_sum}")
+        print(f"dt: {dt}")
+        print(f"Integrator: {args.integrator}")
 
-    current_time = 0
+        
 
-    # list of all the bodies in the simulation
-    bodies = []
-    comets = []
-    all_bodies = []
+else:
+    while True:
+        integrator()
+        current_time += dt
 
-    for body in config[0]:
-        try:
-            GM = body["gm"]
-        except:
-            GM = body["mass"] * G
-        if not body["comet"]:
-            bodies.append(Body(
-                name = body["name"],
-                mass = body["mass"],
-                GM = GM,
-                radius = body["radius"],
-                position = vector(body["position"][0], body["position"][1], body["position"][2]),
-                velocity = vector(body["velocity"][0], body["velocity"][1], body["velocity"][2]),
-                index=len(bodies) + len(comets)
-            ))
-        else:
-            comets.append(Body(
-                name = body["name"],
-                mass = body["mass"],
-                GM = GM,
-                radius = body["radius"],
-                position = vector(body["position"][0], body["position"][1], body["position"][2]),
-                velocity = vector(body["velocity"][0], body["velocity"][1], body["velocity"][2]),
-                index=len(bodies) + len(comets)
-            ))
-
-    all_bodies = bodies + comets
-
-    # loop over every body and run its update method every timestep
-    start_time = time.time()
-    if end_time > 0:
-        for epoch in range(int(end_time/dt)):
-            integrator()
-            current_time = epoch*dt
-        # print body positions for benchmarking
-        if args.printEndPos:
-            for body in bodies:
-                print(f"{body.name}: {body.position}")
-        if args.checkEndPos:
-            error_sum = 0
-            for body in bodies:
-                try:
-                    end_pos = config[0][body.index]["end_position"]
-                    end_pos = vector(end_pos[0], end_pos[1], end_pos[2])
-                    error = (body.position - end_pos).mag # the magnitude of the error
-                    error_sum += error
-                    print(f"{body.name}: {error} AU")
-                except:
-                    print(f"{body.name} has no endPos")
-            print(f"Total error: {error_sum}")
-            print(f"dt: {dt}")
-            print(f"Integrator: {args.integrator}")
-
-            
-
-    else:
-        while True:
-            integrator()
-            current_time += dt
-
-    print(f"Execution time: {time.time()-start_time} seconds")
-
-if __name__ == "__main__":
-    run()
+print(f"Execution time: {time.time()-start_time} seconds")
