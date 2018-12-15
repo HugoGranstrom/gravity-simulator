@@ -31,6 +31,13 @@ parser.add_argument("--checkEndPos", action="store_true", default=False, dest="c
 # parse cmd arguments
 args = parser.parse_args()
 
+class parameters(object):
+    __slots__ = ('G', 'AU', 'M', 'Theta', 'Epsilon', 'Lambda', 'Chi', 'time', 'dt', 'scale', 'rate', 'configfile', 'useconfig', 'integrator', 'printEndPos', 'checkEndPos', 'args',
+                     'current_time', 'bodies', 'comets', 'all_bodies', 'start_time')
+    def __init__(self, ):
+        pass
+
+
 
 # UNITS:
 # Mass: solar mass
