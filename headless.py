@@ -4,97 +4,20 @@ from collections import namedtuple
 import time
 import cyvector
 from math import pi
+from itertools import combinations
 
 vector = cyvector.vector
 
-# argument parsing
-parser = argparse.ArgumentParser(description="A newtonian gravity simulator")
-parser.add_argument("-t", "--time", type=float, default=0, dest="time",
-                    help="The amount of time the simulation will simulate measured in days. Type 0 for infinite time. (Default: 0)")
-parser.add_argument("--dt", type=float, default=0.1, dest="dt",
-                    help="The timestep to use. (Default: 0.1)")
-parser.add_argument("--scale", type=float, default=1000, dest="scale",
-                    help="The number to scale the radiuses of the planets to make them visible. Does only affect the visuals not collisions. (Default: 1000)")
-parser.add_argument("--rate", type=int, default=100000, dest="rate",
-                    help="Number of timesteps per second (Default: 100000)")
-parser.add_argument("--configfile", type=str, default="config.json", dest="configfile",
-                    help="Path to the config file containing the bodies. (Default: config.json)")
-parser.add_argument("--useconfig", action="store_true", default=False, dest="useconfig",
-                    help="Use this flag if you want to use the settings in the configfile instead of defaults and cmd arguments. (Default: False)")
-parser.add_argument("--integrator", type=str, default="verlet", dest="integrator", 
-                    help="The integrator to be used. Options: euler, verlet, rk4, fr, pefrl (Default: verlet)")
-parser.add_argument("--endPos", action="store_true", default=False, dest="printEndPos",
-                    help="When flagged the end position of all bodies will be printed (Deafult: False)")
-parser.add_argument("--checkEndPos", action="store_true", default=False, dest="checkEndPos",
-                    help="When flagged the end position of all bodies is compared to their real end positions, which are given as 'end_position' in config.json (Default: False)")
-
-# parse cmd arguments
-args = parser.parse_args()
-
-class parameters(object):
-    __slots__ = ('G', 'AU', 'M', 'Theta', 'Epsilon', 'Lambda', 'Chi', 'time', 'dt', 'scale', 'rate', 'configfile', 'useconfig', 'integrator', 'printEndPos', 'checkEndPos', 'args',
-                     'current_time', 'bodies', 'comets', 'all_bodies', 'start_time')
-    def __init__(self, ):
-        pass
-
-
-
-# UNITS:
-# Mass: solar mass
-# Length: Astronomical unit
-# Time: days
-# G = 4pi^2*AU^3/(M * 365.25) => G = 4*pi^2/365.25^2
-#G = 6.67e-11
-# AU^3/D^2 = 1/448485856027460.06  km^3/s^2 = 2.2297247205467538e-15 * km^3/s^2
-#scale_factor = 1000
-#dt = 0.01
-
-### Constants ###
-
-#G = 2.9592e-04
-G = 4*pi**2/365.25**2
-AU = 1.5e11
-M = 2e30
-Theta = 1/(2-2**(1/3))
-Epsilon = 0.1786178958448091
-Lambda = -0.2123418310626054
-Chi = -0.6626458266981849E-01
 
 ### containerVector ###
 conVec = namedtuple("conVec","x y")
 
-
-
-# load config json file
-with open(args.configfile, "r") as configfile:
-    config = json.load(configfile)
-
-# use configurations from config json file
-if args.useconfig:
-    try:
-        dt = config[1]["dt"]
-    except:
-        dt = args.dt
-    try:
-        end_time = config[1]["time"]
-    except:
-        end_time = args.time
-    try:
-        integrator = config[1]["integrator"]
-    except:
-        integrator = args.integrator
-# use argument configurations
-else:
-    dt = args.dt
-    end_time = args.time
-    integrator = args.integrator
-
 ### Functions ###
 # gravitational acceleration for Euler and Verlet
-def gravitational_acc(position):
+def gravitational_acc(position, p):
     sum_acc = vector(0,0,0)
     # calculate the gravitational acceleration from all other bodies
-    for body in bodies:
+    for body in p.bodies:
         # distance to the other body
         r_vec = body.position - position
         r = r_vec.mag
@@ -112,7 +35,7 @@ def gravitational_acc(position):
     return sum_acc
 
 # gravitational acceleration for Runge-Kutta
-def gravitational_acc_runge(xv):
+def gravitational_acc_runge(xv, p):
     sum_acc = vector(0,0,0)
     # calculate the gravitational acceleration from all other bodies
     for body in bodies:
@@ -135,18 +58,18 @@ def gravitational_acc_runge(xv):
 ### Integrators ###
 
 # Euler Integrator
-def Euler():
+def Euler(p):
     # acceleration and velocity calculations
-    for body in all_bodies:
-        body.acc = gravitational_acc(body.position)
-        body.velocity += dt * body.acc
+    for body in p.all_bodies:
+        body.acc = gravitational_acc(body.position, p)
+        body.velocity += p.dt * body.acc
 
     # position calculations
-    for body in all_bodies:
-        body.position += dt * body.velocity
+    for body in p.all_bodies:
+        body.position += p.dt * body.velocity
 
 # Runge-Kutta 4 (RK4) Integrator
-def Runge_Kutta():
+def Runge_Kutta(p):
     
     # calculate k1
     for body in all_bodies:
@@ -196,17 +119,17 @@ def Runge_Kutta():
         body.velocity += 1/6 * (body.k[1].y + 2*body.k[2].y + 2*body.k[3].y + body.k[4].y)
 
 # Velocity-Verlet Integrator
-def Verlet():
+def Verlet(p):
     # position calculations
-    for body in all_bodies:
-        body.position += body.velocity * dt + body.acc/2 * dt**2
+    for body in p.all_bodies:
+        body.position += body.velocity * p.dt + body.acc/2 * p.dt**2
     # acceleration and velocity calculations
-    for body in all_bodies:
-        temp_acc = gravitational_acc(body.position)
-        body.velocity += dt/2*(body.acc + temp_acc)
+    for body in p.all_bodies:
+        temp_acc = gravitational_acc(body.position, p)
+        body.velocity += p.dt/2*(body.acc + temp_acc)
         body.acc = temp_acc
 
-def Forest_Ruth():
+def Forest_Ruth(p):
     for body in all_bodies:
         body.position += Theta*dt/2*body.velocity
     for body in all_bodies:
@@ -223,25 +146,25 @@ def Forest_Ruth():
         body.position += Theta*dt/2*body.velocity
 
 
-def PEFRL():
-    for body in all_bodies:
-        body.position += Epsilon*dt*body.velocity
-    for body in all_bodies:
-        body.velocity += (1-2*Lambda)*dt/2*gravitational_acc(body.position)
-    for body in all_bodies:
-        body.position += Chi*dt*body.velocity
-    for body in all_bodies:
-        body.velocity += Lambda*dt*gravitational_acc(body.position)
-    for body in all_bodies:
-        body.position += (1-2*(Chi+Epsilon))*dt*body.velocity
-    for body in all_bodies:
-        body.velocity += Lambda*dt*gravitational_acc(body.position)
-    for body in all_bodies:
-        body.position += Chi*dt*body.velocity
-    for body in all_bodies:
-        body.velocity += (1-2*Lambda)*dt/2*gravitational_acc(body.position)
-    for body in all_bodies:
-        body.position += Epsilon*dt*body.velocity
+def PEFRL(p):
+    for body in p.all_bodies:
+        body.position += p.Epsilon*p.dt*body.velocity
+    for body in p.all_bodies:
+        body.velocity += (1-2*p.Lambda)*p.dt/2*gravitational_acc(body.position, p)
+    for body in p.all_bodies:
+        body.position += p.Chi*p.dt*body.velocity
+    for body in p.all_bodies:
+        body.velocity += p.Lambda*p.dt*gravitational_acc(body.position, p)
+    for body in p.all_bodies:
+        body.position += (1-2*(p.Chi+p.Epsilon))*p.dt*body.velocity
+    for body in p.all_bodies:
+        body.velocity += p.Lambda*p.dt*gravitational_acc(body.position, p)
+    for body in p.all_bodies:
+        body.position += p.Chi*p.dt*body.velocity
+    for body in p.all_bodies:
+        body.velocity += (1-2*p.Lambda)*p.dt/2*gravitational_acc(body.position, p)
+    for body in p.all_bodies:
+        body.position += p.Epsilon*p.dt*body.velocity
 
 ### End Integrators ###
 
@@ -258,85 +181,200 @@ class Body(object):
         self.k = []
         self.xv = conVec(0,0)
         self.radius = radius
-        self.acc = gravitational_acc(self.position) # approximate the initial acceleration for Verlet
+        self.acc = vector(0,0,0) #gravitational_acc(self.position, params) # approximate the initial acceleration for Verlet
         self.name = name
         self.index = index
-        #bodies.append(self) # uncomment if you want automatic adding to bodies list
 
 
+# argument parsing
+parser = argparse.ArgumentParser(description="A newtonian gravity simulator")
+parser.add_argument("-t", "--time", type=float, default=0, dest="time",
+                    help="The amount of time the simulation will simulate measured in days. Type 0 for infinite time. (Default: 0)")
+parser.add_argument("--dt", type=float, default=0.1, dest="dt",
+                    help="The timestep to use. (Default: 0.1)")
+parser.add_argument("--scale", type=float, default=1000, dest="scale",
+                    help="The number to scale the radiuses of the planets to make them visible. Does only affect the visuals not collisions. (Default: 1000)")
+parser.add_argument("--rate", type=int, default=100000, dest="rate",
+                    help="Number of timesteps per second (Default: 100000)")
+parser.add_argument("--configfile", type=str, default="config.json", dest="configfile",
+                    help="Path to the config file containing the bodies. (Default: config.json)")
+parser.add_argument("--useconfig", action="store_true", default=False, dest="useconfig",
+                    help="Use this flag if you want to use the settings in the configfile instead of defaults and cmd arguments. (Default: False)")
+parser.add_argument("--integrator", type=str, default="verlet", dest="integrator", 
+                    help="The integrator to be used. Options: euler, verlet, rk4, fr, pefrl (Default: verlet)")
+parser.add_argument("--endPos", action="store_true", default=False, dest="printEndPos",
+                    help="When flagged the end position of all bodies will be printed (Deafult: False)")
+parser.add_argument("--checkEndPos", action="store_true", default=False, dest="checkEndPos",
+                    help="When flagged the end position of all bodies is compared to their real end positions, which are given as 'end_position' in config.json (Default: False)")
 
-# check which integrator was chosen
-if integrator.lower() == "euler":
-    integrator = Euler
-elif integrator.lower() == "rk4":
-    integrator = Runge_Kutta
-elif integrator.lower() == "verlet":
-    integrator = Verlet
-elif integrator.lower() == "fr":
-    integrator = Forest_Ruth
-elif integrator.lower() == "pefrl":
-    integrator = PEFRL
+# parse cmd arguments
+args = parser.parse_args()
 
+class parameters(object):
+    __slots__ = ('G', 'AU', 'M', 'Theta', 'Epsilon', 'Lambda', 'Chi', 'time', 'dt', 'scale', 'rate', 'config', 'useconfig', 'integrator', 'printEndPos', 'checkEndPos', 'args',
+                     'current_time', 'bodies', 'body_pairs', 'comets', 'all_bodies', 'start_time', 'end_time')
+    def __init__(self, args, G, AU, M, Theta, Epsilon, Lambda, Chi):
 
-current_time = 0
+        self.G = G
+        self.AU = AU
+        self.M = M
+        self.Theta = Theta
+        self.Epsilon = Epsilon
+        self.Lambda = Lambda
+        self.Chi = Chi
 
-# list of all the bodies in the simulation
-bodies = []
-comets = []
-all_bodies = []
+        self.args = args
+        self.printEndPos = args.printEndPos
+        self.checkEndPos = args.checkEndPos
 
-for body in config[0]:
-    try:
-        mass = body["mass"]
-    except:
-        try:
-            mass = body["gm"]/G
-        except:
-            raise Exception(f"{body['name']} don't have a 'mass' or 'gm' value")
+        self.current_time = 0
+        self.bodies = []
+        self.comets = []
+        self.all_bodies = []
+        self.body_pairs = []
 
-    try:
-        GM = body["gm"]
-    except:
-        GM = body["mass"] * G
-    
-    if not body["comet"]:
-        bodies.append(Body(
-            name = body["name"],
-            mass = body["mass"],
-            GM = GM,
-            radius = body["radius"],
-            position = vector(body["position"][0], body["position"][1], body["position"][2]),
-            velocity = vector(body["velocity"][0], body["velocity"][1], body["velocity"][2]),
-            index=len(bodies) + len(comets)
-        ))
-    else:
-        comets.append(Body(
-            name = body["name"],
-            mass = body["mass"],
-            GM = GM,
-            radius = body["radius"],
-            position = vector(body["position"][0], body["position"][1], body["position"][2]),
-            velocity = vector(body["velocity"][0], body["velocity"][1], body["velocity"][2]),
-            index=len(bodies) + len(comets)
-        ))
+        # load config from
+        with open(args.configfile, "r") as configfile:
+            config = json.load(configfile)
+        self.config = config
+        planet_config = config[0]
+        config = config[1] 
+        # load settings from configfile
+        if args.useconfig:
+            
+            if 'dt' in config:
+                self.dt = config['dt']
+            else:
+                self.dt = args.dt
+            
+            if 'time' in config:
+                self.end_time = config['time']
+            else:
+                self.end_time = args.time
+            
+            if 'integrator' in config:
+                self.integrator = config['integrator']
+            else:
+                self.integrator = args.integrator
 
-all_bodies = bodies + comets
+        else:
+            self.dt = args.dt
+            self.end_time = args.time
+            self.integrator = args.integrator
+        
+        # check which integrator was chosen
+        if self.integrator.lower() == "euler":
+            self.integrator = Euler
+        elif self.integrator.lower() == "rk4":
+            self.integrator = Runge_Kutta
+        elif self.integrator.lower() == "verlet":
+            self.integrator = Verlet
+        elif self.integrator.lower() == "fr":
+            self.integrator = Forest_Ruth
+        elif self.integrator.lower() == "pefrl":
+            self.integrator = PEFRL
+        else:
+            raise Exception('No valid integrator was provided')
+        
+        # load planets from configfile
+        for i, body in enumerate(planet_config):
+            # check to see if all needed fields are filled
+            if not 'mass' in body and not 'gm' in body:
+                raise Exception(f"Body nr. {i} don't have any mass properties")
+            else:
+                if 'gm' in body:
+                    gm = body['gm']
+                else:
+                    gm = body['mass'] * self.G
+                if 'mass' in body:
+                    mass = body['mass']
+                else:
+                    mass = body['gm']/self.G
+
+            if not 'radius' in body:
+                raise Exception(f"Body nr. {i} don't have any radius property")
+            else:
+                radius = body['radius']
+
+            if not 'position' in body:
+                raise Exception(f"Body nr. {i} don't have any position property")
+            else:
+                position = body['position']
+
+            if not 'velocity' in body:
+                raise Exception(f"Body nr. {i} don't have any velocity property")
+            else:
+                velocity = body['velocity']
+
+            if not 'name' in body:
+                print(f"WARNING: Body nr. {i} don't have a name property, default 'Body{i}'' will be used.")
+                name = f"Body{i}"
+            else:
+                name = body['name']
+
+            if not 'comet' in body:
+                print(f"WARNING: Body nr. {i} don't have a comet property, default 'false' will be used.")
+                comet = False
+            else:
+                comet = body['comet']
+            
+            # add planet to corresponding list
+            if comet:
+                self.comets.append(Body(
+                    name = name,
+                    mass=mass,
+                    GM=gm,
+                    radius=radius,
+                    position=vector(position[0], position[1], position[2]),
+                    velocity=vector(velocity[0], velocity[1], velocity[2]),
+                    index=len(self.bodies) + len(self.comets)
+                ))
+            else:
+                self.bodies.append(Body(
+                    name = name,
+                    mass=mass,
+                    GM=gm,
+                    radius=radius,
+                    position=vector(position[0], position[1], position[2]),
+                    velocity=vector(velocity[0], velocity[1], velocity[2]),
+                    index=len(self.bodies) + len(self.comets)
+                ))
+            
+            self.body_pairs = combinations(self.bodies, 2)
+            self.all_bodies = self.bodies + self.comets
+
+            ### END parameters.__init__() ###
+
+p = parameters(
+    args=args,
+    G=4*pi**2/365.25**2,
+    AU = 1.5e11,
+    M = 2e30,
+    Theta = 1/(2-2**(1/3)),
+    Epsilon = 0.1786178958448091,
+    Lambda = -0.2123418310626054,
+    Chi = -0.6626458266981849E-01,
+)
+
+# initialize acceleration for verlet
+for body in p.all_bodies:
+    body.acc = gravitational_acc(body.position, p)
 
 # loop over every body and run its update method every timestep
-start_time = time.time()
-if end_time > 0:
-    for epoch in range(int(end_time/dt)):
-        integrator()
-        current_time = epoch*dt
+p.start_time = time.time()
+if p.end_time > 0:
+    for epoch in range(int(p.end_time/p.dt)):
+        p.integrator(p)
+        p.current_time = epoch*p.dt
     # print body positions for benchmarking
-    if args.printEndPos:
-        for body in bodies:
+    if p.printEndPos:
+        for body in p.bodies:
             print(f"{body.name}: {body.position}")
-    if args.checkEndPos:
+    if p.checkEndPos:
         error_sum = 0
-        for body in bodies:
+        for body in p.bodies:
             try:
-                end_pos = config[0][body.index]["end_position"]
+                end_pos = p.config[0][body.index]["end_position"]
                 end_pos = vector(end_pos[0], end_pos[1], end_pos[2])
                 error = (body.position - end_pos).mag # the magnitude of the error
                 error_sum += error
@@ -344,14 +382,35 @@ if end_time > 0:
             except:
                 print(f"{body.name} has no endPos")
         print(f"Total error: {error_sum}")
-        print(f"dt: {dt}")
-        print(f"Integrator: {args.integrator}")
+        print(f"dt: {p.dt}")
+        print(f"Integrator: {p.args.integrator}")
 
         
 
 else:
     while True:
-        integrator()
-        current_time += dt
+        p.integrator(p)
+        p.current_time += p.dt
 
-print(f"Execution time: {time.time()-start_time} seconds")
+print(f"Execution time: {time.time()-p.start_time} seconds")
+
+# UNITS:
+# Mass: solar mass
+# Length: Astronomical unit
+# Time: days
+# G = 4pi^2*AU^3/(M * 365.25) => G = 4*pi^2/365.25^2
+#G = 6.67e-11
+# AU^3/D^2 = 1/448485856027460.06  km^3/s^2 = 2.2297247205467538e-15 * km^3/s^2
+#scale_factor = 1000
+#dt = 0.01
+
+### Constants ###
+
+#G = 0.00029592338593516714
+# G = 4*pi**2/365.25**2
+# AU = 1.5e11
+# M = 2e30
+# Theta = 1/(2-2**(1/3))
+# Epsilon = 0.1786178958448091
+# Lambda = -0.2123418310626054
+# Chi = -0.6626458266981849E-01
