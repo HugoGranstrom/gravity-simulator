@@ -240,7 +240,8 @@ def PEFRL():
 
 
 
-class Body():
+class Body(object):
+    __slots__ = ('mass', 'GM', 'velocity', 'position', 'temp_position', 'k', 'xv', 'radius', 'acc', 'name', 'index')
     def __init__(self, mass=1, GM=1, radius=1, velocity=vector(0,0,0), position=vector(0,0,0), name="Body", index=0):
         self.mass = mass
         self.GM = GM
