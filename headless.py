@@ -280,9 +280,18 @@ all_bodies = []
 
 for body in config[0]:
     try:
+        mass = body["mass"]
+    except:
+        try:
+            mass = body["gm"]/G
+        except:
+            raise Exception(f"{body['name']} don't have a 'mass' or 'gm' value")
+
+    try:
         GM = body["gm"]
     except:
         GM = body["mass"] * G
+    
     if not body["comet"]:
         bodies.append(Body(
             name = body["name"],
