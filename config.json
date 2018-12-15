@@ -152,5 +152,10 @@
             "scale": true,
             "comet": true
         }
-    ]
+    ],
+    
+    {
+        "dt": 0.1,
+        "integrator": "verlet"
+    }
 ]
