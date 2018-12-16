@@ -2,7 +2,6 @@
 import json
 import platform
 from itertools import combinations
-import integrators_headless as integrators
 
 ### containerVector ###
 from collections import namedtuple
@@ -19,6 +18,8 @@ try:
 except:
     import cyvector
     vector = cyvector.vector
+
+import integrators_headless as integrators
 
 ### Body class ###
 class Body(object):
