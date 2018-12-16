@@ -24,7 +24,7 @@ import integrators_headless as integrators
 
 ### Body class ###
 class Body(object):
-    __slots__ = ('mass', 'GM', 'velocity', 'position', 'temp_position', 'k', 'xv', 'radius', 'acc', 'name', 'index')
+    __slots__ = ('mass', 'GM', 'velocity', 'position', 'temp_position', 'k', 'xv', 'radius', 'acc', 'name', 'index', 'sum_forces')
     def __init__(self, mass=1, GM=1, radius=1, velocity=vector(0,0,0), position=vector(0,0,0), name="Body", index=0):
         self.mass = mass
         self.GM = GM
@@ -35,6 +35,7 @@ class Body(object):
         self.xv = conVec(0,0)
         self.radius = radius
         self.acc = vector(0,0,0) #gravitational_acc(self.position, params) # approximate the initial acceleration for Verlet
+        self.sum_forces = vector(0,0,0)
         self.name = name
         self.index = index
 
