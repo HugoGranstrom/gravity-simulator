@@ -113,25 +113,6 @@ def PEFRL(p):
 ### End Integrators ###
 
 ### Functions ###
-def grav_acc_calc(p):
-    # body - body interaction
-    for body1, body2 in p.body_pairs:
-        # r_vec has dir from body2 to body1
-        r_vec = body1.position - body2.position
-        force = p.G * body1.mass * body2.mass / r_vec.mag2
-        dir = r_vec.hat
-        force = force * dir
-        body1.sum_forces += -force
-        body2.sum_forces += force
-    for body in p.bodies:
-        body.acc = body.sum_forces / body.mass
-        body.sum_forces = vector(0,0,0) # reset sum_forces
-
-    # comet - body interaction
-    for body in p.comets:
-        body.acc = gravitational_acc(body.position, p)
-
-
 # gravitational acceleration for Euler and Verlet
 def gravitational_acc(position, p):
     sum_acc = vector(0,0,0)
