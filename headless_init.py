@@ -19,6 +19,7 @@ except:
     import cyvector
     vector = cyvector.vector
 
+### TODO: fix circular import
 import integrators_headless as integrators
 
 ### Body class ###
