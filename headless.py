@@ -30,7 +30,7 @@ def run():
 
     p = parameters(
         args=args,
-        G=4*pi**2/365.25**2,
+        G=4*pi**2/365.2422**2,
         AU = 1.5e11,
         M = 2e30,
         Theta = 1/(2-2**(1/3)),
