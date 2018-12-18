@@ -1,25 +1,7 @@
 ### General imports
 import json
-import platform
-
-### containerVector ###
-from collections import namedtuple
-conVec = namedtuple("conVec","x y")
-
-### Vector Class ###
-try:
-    if platform.python_implementation() == 'PyPy':
-        import vector   # use pure python vector for PyPy
-        vector = vector.vector
-    else:
-        import cyvector.vector
-        vector = cyvector.vector
-except:
-    import cyvector
-    vector = cyvector.vector
-
-### TODO: fix circular import
-import integrators_headless as integrators
+from tools import conVec, vector
+import integrators
 
 ### Body class ###
 class Body(object):

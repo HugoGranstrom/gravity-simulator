@@ -2,7 +2,8 @@ def run():
     import argparse
     import time
     from math import pi
-    from headless_init import vector, parameters
+    from headless_init import parameters
+    from tools import vector
 
     # argument parsing
     parser = argparse.ArgumentParser(description="A newtonian gravity simulator")
