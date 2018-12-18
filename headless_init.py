@@ -151,9 +151,9 @@ class parameters(object):
                     index=len(self.bodies) + len(self.comets)
                 ))
             
-            self.all_bodies = self.bodies + self.comets
+        self.all_bodies = self.bodies + self.comets
 
-            # initialize acceleration for verlet
-            for body in self.all_bodies:
-                body.acc = integrators.gravitational_acc(body.position, self)
-            ### END parameters.__init__() ###
+        # initialize acceleration for verlet
+        for body in self.all_bodies:
+            body.acc = integrators.gravitational_acc(body.position, self)
+        ### END parameters.__init__() ###
