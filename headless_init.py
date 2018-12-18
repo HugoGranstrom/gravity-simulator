@@ -1,7 +1,6 @@
 ### General imports
 import json
 import platform
-from itertools import combinations
 
 ### containerVector ###
 from collections import namedtuple
@@ -170,7 +169,6 @@ class parameters(object):
                     index=len(self.bodies) + len(self.comets)
                 ))
             
-            #self.body_pairs = combinations(self.bodies, 2)
             self.all_bodies = self.bodies + self.comets
 
             # initialize acceleration for verlet
