@@ -14,7 +14,7 @@ class Body():
         self.GM = GM
         self.velocity = velocity
         self.position = position
-        self.temp_position = vector(0,0,0)
+        self.temp_position = position
         self.k = []
         self.xv = conVec(0,0)
         #self.sum_forces = vector(0,0,0)

@@ -11,7 +11,7 @@ class Body(object):
         self.GM = GM
         self.velocity = velocity
         self.position = position
-        self.temp_position = vector(0,0,0)
+        self.temp_position = position
         self.k = []
         self.xv = conVec(0,0)
         self.radius = radius
