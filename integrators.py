@@ -124,12 +124,7 @@ def gravitational_acc(position, p):
         # skip if body is itself
         if r < body.radius:
             continue
-        # the magnitude of the force
-        acc = body.GM / r_vec.mag2
-        # the unit vector for the force
-        dir = r_vec.hat
-        # the force vector
-        acc = acc * dir
+        acc = r_vec * body.GM / r**3
         # add force vector to the sum of forces
         sum_acc += acc
     return sum_acc
@@ -145,12 +140,15 @@ def gravitational_acc_runge(xv, p):
         # skip if body is itself
         if r < body.radius:
             continue
-        # the magnitude of the force
-        acc = body.GM / r_vec.mag2
-        # the unit vector for the force
-        dir = r_vec.hat
-        # the force vector
-        acc = acc * dir
+        # # the magnitude of the force
+        # acc = body.GM / r_vec.mag2
+        # # the unit vector for the force
+        # dir = r_vec.hat
+        # # the force vector
+        # acc = acc * dir
+
+        acc = r_vec * body.GM / r**3
+
         # add force vector to the sum of forces
         sum_acc += acc
     return conVec(xv.y, sum_acc)
