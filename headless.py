@@ -42,7 +42,7 @@ def run():
 
     # loop over every body and run its update method every timestep
     p.start_time = time.time()
-    if p.end_time > 0:
+    if p.end_time != 0:
         for epoch in range(int(p.end_time/p.dt)):
             p.integrator(p)
             p.current_time = epoch*p.dt
