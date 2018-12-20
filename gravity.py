@@ -90,7 +90,7 @@ def run():
             rate(p.args.rate)
 
             p.integrator(p)
-            for body in p.bodies:
+            for body in p.all_bodies:
                 body.sphere.pos = body.position
                 body.label.pos = body.position
             p.current_time = epoch*p.dt
@@ -121,7 +121,7 @@ def run():
             rate(p.args.rate)
 
             p.integrator(p)
-            for body in p.bodies:
+            for body in p.all_bodies:
                 body.sphere.pos = body.position
                 body.label.pos = body.position
             time_label.text = "Time: {:.2f} years".format(p.current_time/365)
