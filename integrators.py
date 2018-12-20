@@ -122,7 +122,7 @@ def gravitational_acc(position, p):
         r_vec = body.position - position
         r = r_vec.mag
         # skip if body is itself
-        if r < body.radius:
+        if r == 0:
             continue
         acc = r_vec * body.GM / r**3
         # add force vector to the sum of forces
