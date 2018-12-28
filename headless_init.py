@@ -5,25 +5,79 @@ import integrators
 
 ### Body class ###
 class Body(object):
-    __slots__ = ('mass', 'GM', 'velocity', 'position', 'temp_position', 'k', 'xv', 'radius', 'acc', 'name', 'index')
-    def __init__(self, mass=1, GM=1, radius=1, velocity=vector(0,0,0), position=vector(0,0,0), name="Body", index=0):
+    __slots__ = (
+        "mass",
+        "GM",
+        "velocity",
+        "position",
+        "temp_position",
+        "k",
+        "xv",
+        "radius",
+        "acc",
+        "name",
+        "index",
+        "old_positions",
+    )
+
+    def __init__(
+        self,
+        mass=1,
+        GM=1,
+        radius=1,
+        velocity=vector(0, 0, 0),
+        position=vector(0, 0, 0),
+        name="Body",
+        index=0,
+    ):
         self.mass = mass
         self.GM = GM
         self.velocity = velocity
         self.position = position
         self.temp_position = position
         self.k = []
-        self.xv = conVec(0,0)
+        self.xv = conVec(0, 0)
         self.radius = radius
-        self.acc = vector(0,0,0) #gravitational_acc(self.position, params) # approximate the initial acceleration for Verlet
+        self.acc = vector(
+            0, 0, 0
+        )  # gravitational_acc(self.position, params) # approximate the initial acceleration for Verlet
         self.name = name
         self.index = index
+        self.old_positions = [vector(0, 0, 0), vector(0, 0, 0), self.position]
 
 
 ### Parameters class ###
 class parameters(object):
-    __slots__ = ('G', 'AU', 'M', 'Theta', 'Epsilon', 'Lambda', 'Chi', 'time', 'dt', 'scale', 'rate', 'config', 'useconfig', 'integrator', 'printEndPos', 'checkEndPos', 'args',
-                     'current_time', 'bodies', 'body_pairs', 'comets', 'all_bodies', 'start_time', 'end_time')
+    __slots__ = (
+        "G",
+        "AU",
+        "M",
+        "Theta",
+        "Epsilon",
+        "Lambda",
+        "Chi",
+        "time",
+        "dt",
+        "scale",
+        "rate",
+        "config",
+        "useconfig",
+        "integrator",
+        "printEndPos",
+        "checkEndPos",
+        "args",
+        "current_time",
+        "bodies",
+        "body_pairs",
+        "comets",
+        "all_bodies",
+        "start_time",
+        "end_time",
+        "adaptive",
+        "next_dt",
+        "old_times",
+    )
+
     def __init__(self, args, G, AU, M, Theta, Epsilon, Lambda, Chi):
 
         self.G = G
@@ -39,6 +93,7 @@ class parameters(object):
         self.checkEndPos = args.checkEndPos
 
         self.current_time = 0
+        self.old_times = [0, 0, 0]
         self.bodies = []
         self.comets = []
         self.all_bodies = []
@@ -49,22 +104,25 @@ class parameters(object):
             config = json.load(configfile)
         self.config = config
         planet_config = config[0]
-        config = config[1] 
+        try:
+            config = config[1]
+        except:
+            config = None
         # load settings from configfile
         if args.useconfig:
-            
-            if 'dt' in config:
-                self.dt = config['dt']
+
+            if "dt" in config:
+                self.dt = config["dt"]
             else:
                 self.dt = args.dt
-            
-            if 'time' in config:
-                self.end_time = config['time']
+
+            if "time" in config:
+                self.end_time = config["time"]
             else:
                 self.end_time = args.time
-            
-            if 'integrator' in config:
-                self.integrator = config['integrator']
+
+            if "integrator" in config:
+                self.integrator = config["integrator"]
             else:
                 self.integrator = args.integrator
 
@@ -72,85 +130,101 @@ class parameters(object):
             self.dt = args.dt
             self.end_time = args.time
             self.integrator = args.integrator
-        
+        self.next_dt = self.dt
         # check which integrator was chosen
         if self.integrator.lower() == "euler":
             self.integrator = integrators.Euler
+            self.adaptive = False
         elif self.integrator.lower() == "rk4":
             self.integrator = integrators.Runge_Kutta
+            self.adaptive = False
         elif self.integrator.lower() == "verlet":
             self.integrator = integrators.Verlet
+            self.adaptive = False
         elif self.integrator.lower() == "fr":
             self.integrator = integrators.Forest_Ruth
+            self.adaptive = False
         elif self.integrator.lower() == "pefrl":
             self.integrator = integrators.PEFRL
+            self.adaptive = False
+        elif self.integrator.lower() == "rk45":
+            self.integrator = integrators.Runge_Kutta_45
+            self.adaptive = True
         else:
-            raise Exception('No valid integrator was provided')
-        
+            raise Exception("No valid integrator was provided")
+
         # load planets from configfile
         for i, body in enumerate(planet_config):
             # check to see if all needed fields are filled
-            if not 'mass' in body and not 'gm' in body:
+            if not "mass" in body and not "gm" in body:
                 raise Exception(f"Body nr. {i} don't have any mass properties")
             else:
-                if 'gm' in body:
-                    gm = body['gm']
+                if "gm" in body:
+                    gm = body["gm"]
                 else:
-                    gm = body['mass'] * self.G
-                if 'mass' in body:
-                    mass = body['mass']
+                    gm = body["mass"] * self.G
+                if "mass" in body:
+                    mass = body["mass"]
                 else:
-                    mass = body['gm']/self.G
+                    mass = body["gm"] / self.G
 
-            if not 'radius' in body:
+            if not "radius" in body:
                 raise Exception(f"Body nr. {i} don't have any radius property")
             else:
-                radius = body['radius']
+                radius = body["radius"]
 
-            if not 'position' in body:
+            if not "position" in body:
                 raise Exception(f"Body nr. {i} don't have any position property")
             else:
-                position = body['position']
+                position = body["position"]
 
-            if not 'velocity' in body:
+            if not "velocity" in body:
                 raise Exception(f"Body nr. {i} don't have any velocity property")
             else:
-                velocity = body['velocity']
+                velocity = body["velocity"]
 
-            if not 'name' in body:
-                print(f"WARNING: Body nr. {i} don't have a name property, default 'Body{i}'' will be used.")
+            if not "name" in body:
+                print(
+                    f"WARNING: Body nr. {i} don't have a name property, default 'Body{i}'' will be used."
+                )
                 name = f"Body{i}"
             else:
-                name = body['name']
+                name = body["name"]
 
-            if not 'comet' in body:
-                print(f"WARNING: Body nr. {i} don't have a comet property, default 'false' will be used.")
+            if not "comet" in body:
+                print(
+                    f"WARNING: Body nr. {i} don't have a comet property, default 'false' will be used."
+                )
                 comet = False
             else:
-                comet = body['comet']
-            
+                comet = body["comet"]
+
             # add planet to corresponding list
             if comet:
-                self.comets.append(Body(
-                    name = name,
-                    mass=mass,
-                    GM=gm,
-                    radius=radius,
-                    position=vector(position[0], position[1], position[2]),
-                    velocity=vector(velocity[0], velocity[1], velocity[2]),
-                    index=len(self.bodies) + len(self.comets)
-                ))
+                self.comets.append(
+                    Body(
+                        name=name,
+                        mass=mass,
+                        GM=gm,
+                        radius=radius,
+                        position=vector(position[0], position[1], position[2]),
+                        velocity=vector(velocity[0], velocity[1], velocity[2]),
+                        index=len(self.bodies) + len(self.comets),
+                    )
+                )
             else:
-                self.bodies.append(Body(
-                    name = name,
-                    mass=mass,
-                    GM=gm,
-                    radius=radius,
-                    position=vector(position[0], position[1], position[2]),
-                    velocity=vector(velocity[0], velocity[1], velocity[2]),
-                    index=len(self.bodies) + len(self.comets)
-                ))
-            
+                self.bodies.append(
+                    Body(
+                        name=name,
+                        mass=mass,
+                        GM=gm,
+                        radius=radius,
+                        position=vector(position[0], position[1], position[2]),
+                        velocity=vector(velocity[0], velocity[1], velocity[2]),
+                        index=len(self.bodies) + len(self.comets),
+                    )
+                )
+
         self.all_bodies = self.bodies + self.comets
 
         # initialize acceleration for verlet
