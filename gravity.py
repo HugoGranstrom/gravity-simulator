@@ -194,7 +194,5 @@ def run():
             p.current_time += p.dt
 
     print(f"Execution time: {time.time()-p.start_time} seconds")
-
-
 if __name__ == "__main__":
     run()
