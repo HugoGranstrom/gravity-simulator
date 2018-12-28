@@ -1,36 +1,103 @@
-from vpython import color, label, sphere, vector
+from vpython import color, label, sphere, vector  # , simple_sphere
 from tools import conVec
 import json
 import integrators
 
+# import random
+
 
 def color_to_vector(color_list):
-    return vector(color_list[0]/255, color_list[1]/255, color_list[2]/255)
+    return vector(color_list[0] / 255, color_list[1] / 255, color_list[2] / 255)
 
-class Body():
-    __slots__ = ('mass', 'GM', 'velocity', 'position', 'temp_position', 'k', 'xv', 'radius', 'acc', 'name', 'index', 'color', 'label', 'sphere', 'scale')
-    def __init__(self, mass=1, GM=1, radius=1, velocity=vector(0,0,0), position=vector(0,0,0), color=color.white, trail=True, name="Body", scale=True, index=0):
+
+class Body:
+    __slots__ = (
+        "mass",
+        "GM",
+        "velocity",
+        "position",
+        "temp_position",
+        "k",
+        "xv",
+        "radius",
+        "acc",
+        "name",
+        "index",
+        "color",
+        "label",
+        "sphere",
+        "scale",
+    )
+
+    def __init__(
+        self,
+        mass=1,
+        GM=1,
+        radius=1,
+        velocity=vector(0, 0, 0),
+        position=vector(0, 0, 0),
+        color=color.white,
+        trail=True,
+        name="Body",
+        scale=True,
+        index=0,
+    ):
         self.mass = mass
         self.GM = GM
         self.velocity = velocity
         self.position = position
         self.temp_position = position
         self.k = []
-        self.xv = conVec(0,0)
-        #self.sum_forces = vector(0,0,0)
+        self.xv = conVec(0, 0)
+        # self.sum_forces = vector(0,0,0)
         self.color = color
         self.radius = radius
-        self.acc = vector(0,0,0) #gravitational_acc(self.position) # approximate the initial acceleration for Verlet
+        self.acc = vector(
+            0, 0, 0
+        )  # gravitational_acc(self.position) # approximate the initial acceleration for Verlet
         self.name = name
         self.label = label(pos=self.position, text=self.name, height=10)
         self.index = index
-        self.sphere = sphere(pos=self.position, color=self.color, radius=self.radius, make_trail=trail, retain=200, index=self.index)
+        self.sphere = sphere(
+            pos=self.position,
+            color=self.color,
+            radius=self.radius,
+            make_trail=trail,
+            retain=200,
+            index=self.index,
+        )
         self.scale = scale
 
 
 class parameters(object):
-    __slots__ = ('G', 'AU', 'M', 'Theta', 'Epsilon', 'Lambda', 'Chi', 'time', 'dt', 'scale', 'rate', 'config', 'useconfig', 'integrator', 'printEndPos', 'checkEndPos', 'scale_factor','args',
-                     'current_time', 'bodies', 'body_pairs', 'comets', 'all_bodies', 'start_time', 'end_time')
+    __slots__ = (
+        "G",
+        "AU",
+        "M",
+        "Theta",
+        "Epsilon",
+        "Lambda",
+        "Chi",
+        "time",
+        "dt",
+        "scale",
+        "rate",
+        "config",
+        "useconfig",
+        "integrator",
+        "printEndPos",
+        "checkEndPos",
+        "scale_factor",
+        "args",
+        "current_time",
+        "bodies",
+        "body_pairs",
+        "comets",
+        "all_bodies",
+        "start_time",
+        "end_time",
+    )
+
     def __init__(self, args, G, AU, M, Theta, Epsilon, Lambda, Chi):
 
         self.G = G
@@ -56,27 +123,27 @@ class parameters(object):
             config = json.load(configfile)
         self.config = config
         planet_config = config[0]
-        config = config[1] 
+        config = config[1]
         # load settings from configfile
         if args.useconfig:
-            
-            if 'dt' in config:
-                self.dt = config['dt']
+
+            if "dt" in config:
+                self.dt = config["dt"]
             else:
                 self.dt = args.dt
-            
-            if 'time' in config:
-                self.end_time = config['time']
+
+            if "time" in config:
+                self.end_time = config["time"]
             else:
                 self.end_time = args.time
-            
-            if 'integrator' in config:
-                self.integrator = config['integrator']
+
+            if "integrator" in config:
+                self.integrator = config["integrator"]
             else:
                 self.integrator = args.integrator
-            
-            if 'scale_factor' in config:
-                self.scale_factor = config['scale_factor']
+
+            if "scale_factor" in config:
+                self.scale_factor = config["scale_factor"]
             else:
                 self.scale_factor = args.scale
 
@@ -85,7 +152,7 @@ class parameters(object):
             self.end_time = args.time
             self.integrator = args.integrator
             self.scale_factor = args.scale
-        
+
         # check which integrator was chosen
         if self.integrator.lower() == "euler":
             self.integrator = integrators.Euler
@@ -98,96 +165,124 @@ class parameters(object):
         elif self.integrator.lower() == "pefrl":
             self.integrator = integrators.PEFRL
         else:
-            raise Exception('No valid integrator was provided')
-        
+            raise Exception("No valid integrator was provided")
+
         # load planets from configfile
         for i, body in enumerate(planet_config):
             # check to see if all needed fields are filled
-            if not 'mass' in body and not 'gm' in body:
+            if not "mass" in body and not "gm" in body:
                 raise Exception(f"Body nr. {i} don't have any mass properties")
             else:
-                if 'gm' in body:
-                    gm = body['gm']
+                if "gm" in body:
+                    gm = body["gm"]
                 else:
-                    gm = body['mass'] * self.G
-                if 'mass' in body:
-                    mass = body['mass']
+                    gm = body["mass"] * self.G
+                if "mass" in body:
+                    mass = body["mass"]
                 else:
-                    mass = body['gm']/self.G
+                    mass = body["gm"] / self.G
 
-            if not 'radius' in body:
+            if not "radius" in body:
                 raise Exception(f"Body nr. {i} don't have any radius property")
             else:
-                radius = body['radius']
+                radius = body["radius"]
 
-            if not 'position' in body:
+            if not "position" in body:
                 raise Exception(f"Body nr. {i} don't have any position property")
             else:
-                position = body['position']
+                position = body["position"]
 
-            if not 'velocity' in body:
+            if not "velocity" in body:
                 raise Exception(f"Body nr. {i} don't have any velocity property")
             else:
-                velocity = body['velocity']
+                velocity = body["velocity"]
 
-            if not 'name' in body:
-                print(f"WARNING: Body nr. {i} don't have a name property, default 'Body{i}'' will be used.")
+            if not "name" in body:
+                print(
+                    f"WARNING: Body nr. {i} don't have a name property, default 'Body{i}'' will be used."
+                )
                 name = f"Body{i}"
             else:
-                name = body['name']
+                name = body["name"]
 
-            if not 'comet' in body:
-                print(f"WARNING: Body nr. {i} don't have a comet property, default 'false' will be used.")
+            if not "comet" in body:
+                print(
+                    f"WARNING: Body nr. {i} don't have a comet property, default 'false' will be used."
+                )
                 comet = False
             else:
-                comet = body['comet']
-            
-            if not 'trail' in body:
-                print(f"WARNING: Body nr. {i} don't have a trail property, default 'true' will be used.")
+                comet = body["comet"]
+
+            if not "trail" in body:
+                print(
+                    f"WARNING: Body nr. {i} don't have a trail property, default 'true' will be used."
+                )
                 trail = True
             else:
-                trail = body['trail']
+                trail = body["trail"]
 
-            if not 'color' in body:
-                print(f"WARNING: Body nr. {i} don't have a color property, default [255, 255, 255] will be used.")
+            if not "color" in body:
+                print(
+                    f"WARNING: Body nr. {i} don't have a color property, default [255, 255, 255] will be used."
+                )
                 color = [255, 255, 255]
             else:
-                color = body['color']
-            
-            if not 'scale' in body:
-                print(f"WARNING: Body nr. {i} don't have a scale property, default 'true' will be used.")
+                color = body["color"]
+
+            if not "scale" in body:
+                print(
+                    f"WARNING: Body nr. {i} don't have a scale property, default 'true' will be used."
+                )
                 scale = True
             else:
-                scale = body['scale']
+                scale = body["scale"]
 
             # add planet to corresponding list
             if comet:
-                self.comets.append(Body(
-                    name = name,
-                    mass=mass,
-                    GM=gm,
-                    radius=radius,
-                    position=vector(position[0], position[1], position[2]),
-                    velocity=vector(velocity[0], velocity[1], velocity[2]),
-                    index=len(self.bodies) + len(self.comets),
-                    trail=trail,
-                    color=color_to_vector(color),
-                    scale=scale,
-                ))
+                self.comets.append(
+                    Body(
+                        name=name,
+                        mass=mass,
+                        GM=gm,
+                        radius=radius,
+                        position=vector(position[0], position[1], position[2]),
+                        velocity=vector(velocity[0], velocity[1], velocity[2]),
+                        index=len(self.bodies) + len(self.comets),
+                        trail=trail,
+                        color=color_to_vector(color),
+                        scale=scale,
+                    )
+                )
             else:
-                self.bodies.append(Body(
-                    name = name,
-                    mass=mass,
-                    GM=gm,
-                    radius=radius,
-                    position=vector(position[0], position[1], position[2]),
-                    velocity=vector(velocity[0], velocity[1], velocity[2]),
-                    index=len(self.bodies) + len(self.comets),
-                    trail=trail,
-                    color=color_to_vector(color),
-                    scale=scale,
-                ))
-            
+                self.bodies.append(
+                    Body(
+                        name=name,
+                        mass=mass,
+                        GM=gm,
+                        radius=radius,
+                        position=vector(position[0], position[1], position[2]),
+                        velocity=vector(velocity[0], velocity[1], velocity[2]),
+                        index=len(self.bodies) + len(self.comets),
+                        trail=trail,
+                        color=color_to_vector(color),
+                        scale=scale,
+                    )
+                )
+        """
+        # add N random comets
+        for i in range(100):
+            self.comets.append(Body(
+                name = "",
+                mass=1.1e-16,
+                GM=1.1e-16*self.G,
+                radius=6.67e-06,
+                position=vector(random.uniform(-50, 50), random.uniform(-50, 50), random.uniform(-0.01, 0.01)),
+                velocity=vector(random.uniform(-1e-2, 1e-2), random.uniform(-1e-2, 1e-2), random.uniform(-1e-4, 1e-4)),
+                index=len(self.bodies) + len(self.comets),
+                trail=False,
+                color=color_to_vector(color),
+                scale=True,
+            ))"""
         self.all_bodies = self.bodies + self.comets
         # initialize acceleration for verlet
         for body in self.all_bodies:
