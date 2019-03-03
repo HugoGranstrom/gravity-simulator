@@ -71,7 +71,7 @@ def Runge_Kutta(p):
 
 def Runge_Kutta_45(p):
     tol = 1e-4
-    dt_min = 1e-2
+    dt_min = 1e-3
     dt_max = 1
     while True:
         # calculate k1
@@ -201,7 +201,7 @@ def Runge_Kutta_45(p):
                 body.position
                 + 25 / 216 * body.k[1].x
                 + 1408 / 2565 * body.k[3].x
-                + 2197 / 4101 * body.k[4].x
+                + 2197 / 4104 * body.k[4].x
                 - 1 / 5 * body.k[5].x
             )
             z = (
@@ -234,7 +234,7 @@ def Runge_Kutta_45(p):
         body.velocity += (
             25 / 216 * body.k[1].y
             + 1408 / 2565 * body.k[3].y
-            + 2197 / 4101 * body.k[4].y
+            + 2197 / 4104 * body.k[4].y
             - 1 / 5 * body.k[5].y
         )
 
@@ -292,6 +292,300 @@ def PEFRL(p):
     for body in p.all_bodies:
         body.position += p.Epsilon * p.dt * body.velocity
 
+def Nystrom2(p):
+    for body in p.all_bodies:
+        body.k = [0]
+        body.k.append(p.dt * gravitational_acc(body.position, p))
+    
+    for body in p.all_bodies:
+        body.temp_position = body.position + p.dt * 2/3 * body.velocity + 2/9 * p.dt * body.k[1]
+
+    for body in p.all_bodies:
+        body.k.append(p.dt * gravitational_acc_temp(body.temp_position, p))
+
+    for body in p.all_bodies:
+        body.position = body.position + p.dt * body.velocity + p.dt * (body.k[1]/4 + body.k[2]/4)
+        body.velocity = body.velocity + body.k[1]/4 + body.k[2] * 3/4
+
+def Nystrom3(p):
+    """
+    delta2 = 0.6 - 0.06**0.5
+    delta3 = 0.6 + 0.06**0.5
+    a1 = 0.21 - 0.6 * 0.06*0.5
+    b1 = (0.15 + 4 * 0.06**0.5)/25
+    b2 = (5.1 + 11 * 0.06**0.5)/25
+    alpha1 = 1/9
+    alpha2 = (7 + 20 * 0.06**0.5) / 36
+    alpha3 = (7 - 20 * 0.06**0.5) / 36
+    beta1 = 1/9
+    beta2 = (8 + 5 * 0.06**0.5)/18
+    beta3 = (8 - 5 * 0.06**0.5)/18
+    """
+    delta2 = 0.3550510257
+    delta3 = 0.8449489743 
+    a1 = 0.0630306154 
+    b1 = 0.0451918359
+    b2 = 0.3117775487
+    alpha1 = 0.1111111111
+    alpha2 = 0.3305272081
+    alpha3 = 0.0583616809
+    beta1 = 0.1111111111
+    beta2 = 0.5124858262
+    beta3 = 0.3764030627
+
+    for body in p.all_bodies:
+        body.k = [0]
+        body.k.append(p.dt * gravitational_acc(body.position, p))
+    
+    for body in p.all_bodies:
+        body.temp_position = body.position + delta2 * p.dt * body.velocity + a1 * p.dt * body.k[1]
+    
+    for body in p.all_bodies:
+        body.k.append(p.dt * gravitational_acc_temp(body.temp_position, p))
+        
+    
+    for body in p.all_bodies:
+        body.temp_position = body.position + delta3 * p.dt * body.velocity + p.dt * (b1*body.k[1] + b2 * body.k[2])
+
+    for body in p.all_bodies:
+        body.k.append(p.dt * gravitational_acc_temp(body.temp_position, p))
+
+    for body in p.all_bodies:
+        body.position = body.position + p.dt * body.velocity + p.dt * (alpha1 * body.k[1] + alpha2 * body.k[2] + alpha3 * body.k[3])
+        body.velocity = body.velocity + beta1 * body.k[1] + beta2 * body.k[2] + beta3 * body.k[3]
+
+def Nystrom4(p):
+    delta2 = 0.2123405385
+    delta3 = 0.5905331358
+    delta4 = 0.9114120406
+    a1 = 0.02254425214 
+    b1 = -0.0011439805
+    b2 = 0.1755086728
+    c1 = 0.1171541673
+    c2 = 0.1393754710
+    c3 = 0.1588063156
+    alpha1 = 0.0625000001
+    alpha2 = 0.2590173402
+    alpha3 = 0.1589523623
+    alpha4 = 0.0195302974
+    beta1 = 0.0625000001
+    beta2 = 0.3288443202
+    beta3 = 0.3881934687
+    beta4 = 0.2204622110
+
+    for body in p.all_bodies:
+        body.k = [0]
+        body.k.append(p.dt * gravitational_acc(body.position, p))
+    
+    for body in p.all_bodies:
+        body.temp_position = body.position + delta2 * p.dt * body.velocity + a1 * p.dt * body.k[1]
+    
+    for body in p.all_bodies:
+        body.k.append(p.dt * gravitational_acc_temp(body.temp_position, p))
+    
+    # k3
+    for body in p.all_bodies:
+        body.temp_position = body.position + delta3 * p.dt * body.velocity + p.dt * (b1*body.k[1] + b2 * body.k[2])
+
+    for body in p.all_bodies:
+        body.k.append(p.dt * gravitational_acc_temp(body.temp_position, p))
+    
+    # k4
+    for body in p.all_bodies:
+        body.temp_position = body.position + delta4 * p.dt * body.velocity + p.dt * (c1*body.k[1] + c2 * body.k[2] + c3 * body.k[3])
+
+    for body in p.all_bodies:
+        body.k.append(p.dt * gravitational_acc_temp(body.temp_position, p))
+
+    for body in p.all_bodies:
+        body.position = body.position + p.dt * body.velocity + p.dt * (alpha1 * body.k[1] + alpha2 * body.k[2] + alpha3 * body.k[3] + alpha4 * body.k[4])
+        body.velocity = body.velocity + beta1 * body.k[1] + beta2 * body.k[2] + beta3 * body.k[3] + beta4 * body.k[4]
+
+def Nystrom5(p):
+    delta2 = 1/2
+    delta3 = 1/3
+    delta4 = 2/3
+    delta5 = 1
+    a1 = 1/8
+    b1 = 1/18
+    b2 = 0
+    c1 = 1/9
+    c2 = 0
+    c3 = 1/9
+    d1 = 0
+    d2 = -8/11
+    d3 = 9/11
+    d4 = 9/22
+    alpha1 = 11/120
+    alpha2 = -4/15
+    alpha3 = 9/20
+    alpha4 = 9/40
+    alpha5 = 0
+    beta1 = 11/120
+    beta2 = -8/15
+    beta3 = 27/40
+    beta4 = 27/40
+    beta5 = 11/120
+
+    for body in p.all_bodies:
+        body.k = [0]
+        body.k.append(p.dt * gravitational_acc(body.position, p))
+    
+    for body in p.all_bodies:
+        body.temp_position = body.position + delta2 * p.dt * body.velocity + a1 * p.dt * body.k[1]
+    
+    for body in p.all_bodies:
+        body.k.append(p.dt * gravitational_acc_temp(body.temp_position, p))
+    
+    # k3
+    for body in p.all_bodies:
+        body.temp_position = body.position + delta3 * p.dt * body.velocity + p.dt * (b1*body.k[1] + b2 * body.k[2])
+
+    for body in p.all_bodies:
+        body.k.append(p.dt * gravitational_acc_temp(body.temp_position, p))
+    
+    # k4
+    for body in p.all_bodies:
+        body.temp_position = body.position + delta4 * p.dt * body.velocity + p.dt * (c1*body.k[1] + c2 * body.k[2] + c3 * body.k[3])
+
+    for body in p.all_bodies:
+        body.k.append(p.dt * gravitational_acc_temp(body.temp_position, p))
+
+    # k5
+    for body in p.all_bodies:
+        body.temp_position = body.position + delta5 * p.dt * body.velocity + p.dt * (d1*body.k[1] + d2 * body.k[2] + d3 * body.k[3] + d4 * body.k[4])
+
+    for body in p.all_bodies:
+        body.k.append(p.dt * gravitational_acc_temp(body.temp_position, p))
+
+    for body in p.all_bodies:
+        body.position = body.position + p.dt * body.velocity + p.dt * (alpha1 * body.k[1] + alpha2 * body.k[2] + alpha3 * body.k[3] + alpha4 * body.k[4] + alpha5 * body.k[5])
+        body.velocity = body.velocity + beta1 * body.k[1] + beta2 * body.k[2] + beta3 * body.k[3] + beta4 * body.k[4] + beta5 * body.k[5]
+
+
+def NystromSimos(p):
+    delta2 = 0.25475295159
+    delta3 = 0.50540316962
+    delta4 = 1
+    a1 = 0.03244953299
+    b1 = 0.03292284493
+    b2 = 0.09479333659
+    c1 = 0.19014504913
+    c2 = 0
+    c3 = 0.30985495135 
+    alpha1 = 0.10022791553
+    alpha2 = 0.18458008559 
+    alpha3 = 0.19318290696
+    alpha4 = 0.02200909191 
+    beta1 = 0.16323603847
+    beta2 = 0.01892388531
+    beta3 = 0.65237178035
+    beta4 = 0.16546832871
+
+    for body in p.all_bodies:
+        body.k = [0]
+        body.k.append(p.dt * gravitational_acc(body.position, p))
+    
+    for body in p.all_bodies:
+        body.temp_position = body.position + delta2 * p.dt * body.velocity + a1 * p.dt * body.k[1]
+    
+    for body in p.all_bodies:
+        body.k.append(p.dt * gravitational_acc_temp(body.temp_position, p))
+    
+    # k3
+    for body in p.all_bodies:
+        body.temp_position = body.position + delta3 * p.dt * body.velocity + p.dt * (b1*body.k[1] + b2 * body.k[2])
+
+    for body in p.all_bodies:
+        body.k.append(p.dt * gravitational_acc_temp(body.temp_position, p))
+    
+    # k4
+    for body in p.all_bodies:
+        body.temp_position = body.position + delta4 * p.dt * body.velocity + p.dt * (c1*body.k[1] + c2 * body.k[2] + c3 * body.k[3])
+
+    for body in p.all_bodies:
+        body.k.append(p.dt * gravitational_acc_temp(body.temp_position, p))
+
+    for body in p.all_bodies:
+        body.position = body.position + p.dt * body.velocity + p.dt * (alpha1 * body.k[1] + alpha2 * body.k[2] + alpha3 * body.k[3] + alpha4 * body.k[4])
+        body.velocity = body.velocity + beta1 * body.k[1] + beta2 * body.k[2] + beta3 * body.k[3] + beta4 * body.k[4]
+
+
+def Nystrom6(p):
+    delta2 = 0.1065417886
+    delta3 = 0.2130835772
+    delta4 = 0.5926723008
+    delta5 = 0.916
+    delta6 = 0.972
+    a1 =  0.5675576359e-2
+    b1 =  0.0756743515e-1
+    b2 =  0.1513487029e-1
+    c1 =  0.1400361674
+    c2 =  -0.2544780570
+    c3 =  0.2900721177
+    d1 =  -1.0216436141
+    d2 =  2.6539701073
+    d3 = -1.4861590950
+    d4 =  0.2733606017
+    e1 =  -20.4083294915
+    e2 =  50.3143181086
+    e3 =  -32.3044178724
+    e4 =  2.9494960939
+    e5 =  -0.0786748385
+    alpha1 =  0.0627170177
+    alpha2 = 0
+    alpha3 = 0.2596874616
+    alpha4 = 0.1587555586
+    alpha5 = 0.0191237845
+    alpha6 = -0.0002838224
+    beta1 = 0.0627170177
+    beta2 = 0
+    beta3 = 0.3300064074
+    beta4 = 0.3897489881
+    beta5 = 0.2276641014
+    beta6 = -0.0101365146
+    
+    for body in p.all_bodies:
+        body.k = [0]
+        body.k.append(p.dt * gravitational_acc(body.position, p))
+    
+    for body in p.all_bodies:
+        body.temp_position = body.position + delta2 * p.dt * body.velocity + a1 * p.dt * body.k[1]
+    
+    for body in p.all_bodies:
+        body.k.append(p.dt * gravitational_acc_temp(body.temp_position, p))
+        
+    
+    for body in p.all_bodies:
+        body.temp_position = body.position + delta3 * p.dt * body.velocity + p.dt * (b1*body.k[1] + b2 * body.k[2])
+
+    for body in p.all_bodies:
+        body.k.append(p.dt * gravitational_acc_temp(body.temp_position, p))
+
+    # k4
+    for body in p.all_bodies:
+        body.temp_position = body.position + delta4 * p.dt * body.velocity + p.dt * (c1*body.k[1] + c2 * body.k[2] + c3 * body.k[3])
+
+    for body in p.all_bodies:
+        body.k.append(p.dt * gravitational_acc_temp(body.temp_position, p))
+    
+    # k5
+    for body in p.all_bodies:
+        body.temp_position = body.position + delta5 * p.dt * body.velocity + p.dt * (d1*body.k[1] + d2 * body.k[2] + d3 * body.k[3] + d4 * body.k[4])
+
+    for body in p.all_bodies:
+        body.k.append(p.dt * gravitational_acc_temp(body.temp_position, p))
+    
+    # k6
+    for body in p.all_bodies:
+        body.temp_position = body.position + delta6 * p.dt * body.velocity + p.dt * (e1*body.k[1] + e2 * body.k[2] + e3 * body.k[3] + e4 * body.k[4] + e5 * body.k[5])
+
+    for body in p.all_bodies:
+        body.k.append(p.dt * gravitational_acc_temp(body.temp_position, p))
+
+    for body in p.all_bodies:
+        body.position = body.position + p.dt * body.velocity + p.dt * (alpha1 * body.k[1] + alpha2 * body.k[2] + alpha3 * body.k[3] + alpha4 * body.k[4] + alpha5 * body.k[5] + alpha6 * body.k[6])
+        body.velocity = body.velocity + beta1 * body.k[1] + beta2 * body.k[2] + beta3 * body.k[3] + beta4 * body.k[4] + beta5 * body.k[5] + beta6 * body.k[6]
 
 ### End Integrators ###
 
@@ -312,6 +606,20 @@ def gravitational_acc(position, p):
         sum_acc += acc
     return sum_acc
 
+def gravitational_acc_temp(position, p):
+    sum_acc = vector(0, 0, 0)
+    # calculate the gravitational acceleration from all other bodies
+    for body in p.bodies:
+        # distance to the other body
+        r_vec = body.temp_position - position
+        r = r_vec.mag
+        # skip if body is itself
+        if r == 0:
+            continue
+        acc = r_vec * body.GM / r ** 3
+        # add force vector to the sum of forces
+        sum_acc += acc
+    return sum_acc
 
 # gravitational acceleration for Runge-Kutta
 def gravitational_acc_runge(xv, p):
@@ -335,4 +643,5 @@ def gravitational_acc_runge(xv, p):
 
         # add force vector to the sum of forces
         sum_acc += acc
+        
     return conVec(xv.y, sum_acc)

@@ -150,6 +150,25 @@ class parameters(object):
         elif self.integrator.lower() == "rk45":
             self.integrator = integrators.Runge_Kutta_45
             self.adaptive = True
+        elif self.integrator.lower() == "nystrom2":
+            self.integrator = integrators.Nystrom2
+            self.adaptive = False
+        elif self.integrator.lower() == "nystrom3":
+            self.integrator = integrators.Nystrom3
+            self.adaptive = False
+        elif self.integrator.lower() == "nystrom4":
+            self.integrator = integrators.Nystrom4
+            self.adaptive = False
+        elif self.integrator.lower() == "nystrom5":
+            self.integrator = integrators.Nystrom5
+            self.adaptive = False
+        elif self.integrator.lower() == "nystrom6":
+            self.integrator = integrators.Nystrom6
+            self.adaptive = False
+        elif self.integrator.lower() == "nystromsimos":
+            self.integrator = integrators.NystromSimos
+            self.adaptive = False
+
         else:
             raise Exception("No valid integrator was provided")
 

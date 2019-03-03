@@ -169,16 +169,19 @@ def run():
                 print(f"{body.name}: {body.position}")
         if args.checkEndPos:
             error_sum = 0
+            n_error_counter = 0
             for body in p.bodies:
                 try:
                     end_pos = p.config[0][body.index]["end_position"]
                     end_pos = vector(end_pos[0], end_pos[1], end_pos[2])
                     error = mag(body.position - end_pos)  # the magnitude of the error
                     error_sum += error
+                    n_error_counter += 1
                     print(f"{body.name}: {error} AU")
                 except:
                     pass
             print(f"Total error: {error_sum}")
+            print(f"Average error: {error_sum/n_error_counter}")
             print(f"dt: {p.dt}")
             print(f"Integrator: {args.integrator}")
 

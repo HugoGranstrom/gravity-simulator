@@ -164,6 +164,10 @@ class parameters(object):
             self.integrator = integrators.Forest_Ruth
         elif self.integrator.lower() == "pefrl":
             self.integrator = integrators.PEFRL
+        elif self.integrator.lower() == "nystrom2":
+            self.integrator = integrators.Nystrom2
+        elif self.integrator.lower() == "nystrom3":
+            self.integrator = integrators.Nystrom3
         else:
             raise Exception("No valid integrator was provided")
 
