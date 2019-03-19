@@ -18,6 +18,7 @@ class Body(object):
         "name",
         "index",
         "old_positions",
+        "temp_velocity"
     )
 
     def __init__(
@@ -168,7 +169,24 @@ class parameters(object):
         elif self.integrator.lower() == "nystromsimos":
             self.integrator = integrators.NystromSimos
             self.adaptive = False
-
+        elif self.integrator.lower() == "rkn64":
+            self.integrator = integrators.RKN64
+            self.adaptive = True
+        elif self.integrator.lower() == "rkn12":
+            self.integrator = integrators.RKN12
+            self.adaptive = True
+        elif self.integrator.lower() == "rkn86":
+            self.integrator = integrators.RKN86
+            self.adaptive = True
+        elif self.integrator.lower() == "nystrom11":
+            self.integrator = integrators.Nystrom11
+            self.adaptive = False
+        elif self.integrator.lower() == "nystrom8":
+            self.integrator = integrators.Nystrom8
+            self.adaptive = False
+        elif self.integrator.lower() == "nystrom12":
+            self.integrator = integrators.Nystrom12
+            self.adaptive = False
         else:
             raise Exception("No valid integrator was provided")
 

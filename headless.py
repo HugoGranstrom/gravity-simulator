@@ -93,14 +93,14 @@ def run():
             while p.current_time < p.end_time:
                 p.integrator(p)
 
-                p.old_times[0] = p.old_times[1]
-                p.old_times[1] = p.old_times[2]
-                p.old_times[2] = p.current_time
+                #p.old_times[0] = p.old_times[1]
+                #p.old_times[1] = p.old_times[2]
+                #p.old_times[2] = p.current_time
 
                 p.current_time += p.dt
                 print(p.current_time)
-                p.dt = p.next_dt
-
+                p.dt = min(abs(p.next_dt), abs(p.end_time - p.current_time))
+            """
             # do interpolation here
             for body in p.all_bodies:
                 x = p.end_time
@@ -135,11 +135,13 @@ def run():
                     / ((x4 - x1) * (x4 - x2) * (x4 - x3))
                     * y4
                 )
+            """
 
         else:
-            for epoch in range(int(p.end_time / p.dt)):
+            while p.current_time < p.end_time:
+                p.dt = min(abs(p.dt), abs(p.current_time - p.end_time)) * p.dt / abs(p.dt)
                 p.integrator(p)
-                p.current_time = epoch * p.dt
+                p.current_time += p.dt
         # print body positions for benchmarking
         if p.printEndPos:
             for body in p.bodies:
@@ -159,7 +161,7 @@ def run():
                     print(f"{body.name} has no endPos")
             print(f"Total error: {error_sum}")
             print(f"Average error: {error_sum/n_error_counter}")
-            print(f"dt: {p.dt}")
+            print(f"dt: {args.dt}")
             print(f"Integrator: {p.args.integrator}")
 
     else:
