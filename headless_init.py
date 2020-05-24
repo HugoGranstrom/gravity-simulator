@@ -2,6 +2,7 @@
 import json
 from tools import conVec, vector
 import integrators
+import random
 
 ### Body class ###
 class Body(object):
@@ -18,7 +19,9 @@ class Body(object):
         "name",
         "index",
         "old_positions",
-        "temp_velocity"
+        "old_acc",
+        "temp_velocity",
+        "energy"
     )
 
     def __init__(
@@ -175,9 +178,6 @@ class parameters(object):
         elif self.integrator.lower() == "rkn12":
             self.integrator = integrators.RKN12
             self.adaptive = True
-        elif self.integrator.lower() == "rkn86":
-            self.integrator = integrators.RKN86
-            self.adaptive = True
         elif self.integrator.lower() == "nystrom11":
             self.integrator = integrators.Nystrom11
             self.adaptive = False
@@ -186,6 +186,33 @@ class parameters(object):
             self.adaptive = False
         elif self.integrator.lower() == "nystrom12":
             self.integrator = integrators.Nystrom12
+            self.adaptive = False
+        elif self.integrator.lower() == "sympny10":
+            self.integrator = integrators.SympNystrom10
+            self.adaptive = False
+        elif self.integrator.lower() == "yoshida6":
+            self.integrator = integrators.Yoshida6
+            self.adaptive = False
+        elif self.integrator.lower() == "yoshida8":
+            self.integrator = integrators.Yoshida8
+            self.adaptive = False
+        elif self.integrator.lower() == "kahanli8":
+            self.integrator = integrators.KahanLi8
+            self.adaptive = False
+        elif self.integrator.lower() == "mcate5":
+            self.integrator = integrators.McAte5
+            self.adaptive = False
+        elif self.integrator.lower() == "kuraev":
+            self.integrator = integrators.Kuraev
+            self.adaptive = False
+        elif self.integrator.lower() == "beeman":
+            self.integrator = integrators.Beeman
+            self.adaptive = False
+        elif self.integrator.lower() == "opverlet":
+            self.integrator = integrators.Optimized_Verlet
+            self.adaptive = False
+        elif self.integrator.lower() == "bh":
+            self.integrator = integrators.PEFRL_BH
             self.adaptive = False
         else:
             raise Exception("No valid integrator was provided")
@@ -261,10 +288,27 @@ class parameters(object):
                         index=len(self.bodies) + len(self.comets),
                     )
                 )
-
+        """
+        # add N random comets
+        for i in range(10000):
+            self.bodies.append(Body(
+                name = "",
+                mass=1.1e-16,
+                GM=1.1e-16*self.G,
+                radius=6.67e-06,
+                position=vector(random.uniform(-50, 50), random.uniform(-50, 50), random.uniform(-0.01, 0.01)),
+                velocity=vector(random.uniform(-1e-2, 1e-2), random.uniform(-1e-2, 1e-2), random.uniform(-1e-4, 1e-4)),
+                index=len(self.bodies) + len(self.comets),
+            ))
+        """
         self.all_bodies = self.bodies + self.comets
 
         # initialize acceleration for verlet
         for body in self.all_bodies:
             body.acc = integrators.gravitational_acc(body.position, self)
+        # initialize for leapfrogs
+        for body in self.all_bodies:
+            body.temp_position = body.position - body.velocity * self.dt - 0.5 * body.acc * self.dt ** 2
+        for body in self.all_bodies:
+            body.old_acc = integrators.gravitational_acc_temp(body.temp_position, self)
         ### END parameters.__init__() ###

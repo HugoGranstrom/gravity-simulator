@@ -168,6 +168,8 @@ class parameters(object):
             self.integrator = integrators.Nystrom2
         elif self.integrator.lower() == "nystrom3":
             self.integrator = integrators.Nystrom3
+        elif self.integrator.lower() == "nystrom12":
+            self.integrator = integrators.Nystrom12
         else:
             raise Exception("No valid integrator was provided")
 

@@ -86,6 +86,12 @@ def run():
         Chi=-0.6626458266981849E-01,
     )
 
+
+    initial_energy = 0
+    for body in p.all_bodies:
+        initial_energy += 0.5 * body.mass * body.velocity.mag2
+        if body.name != "Sun":
+            initial_energy += -p.all_bodies[0].GM * body.mass / (body.position - p.all_bodies[0].position).mag
     # loop over every body and run its update method every timestep
     p.start_time = time.time()
     if p.end_time != 0:
@@ -158,7 +164,14 @@ def run():
                     n_error_counter += 1
                     print(f"{body.name}: {error} AU")
                 except:
-                    print(f"{body.name} has no endPos")
+                    #print(f"{body.name} has no endPos")
+                    continue
+            end_energy = 0.0
+            for body in p.all_bodies:
+                end_energy += 0.5 * body.mass * body.velocity.mag2
+                if body.name != "Sun":
+                    end_energy += -p.all_bodies[0].GM * body.mass / (body.position - p.all_bodies[0].position).mag
+            print(f"Energy Diff: {end_energy - initial_energy}")
             print(f"Total error: {error_sum}")
             print(f"Average error: {error_sum/n_error_counter}")
             print(f"dt: {args.dt}")

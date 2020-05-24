@@ -154,7 +154,7 @@ def run():
     # loop over every body and run its update method every timestep
     p.start_time = time.time()
     if p.end_time != 0:
-        for epoch in range(int(p.end_time / p.dt)):
+        for epoch in range(int(p.end_time / abs(p.dt))):
             rate(p.args.rate)
 
             p.integrator(p)
@@ -186,6 +186,7 @@ def run():
             print(f"Integrator: {args.integrator}")
 
     else:
+        el = shapes.ellipse(width=2, height=1)
         while True:
             rate(p.args.rate)
 
